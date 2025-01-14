@@ -1,0 +1,19 @@
+# .gitignore
+# VuePress 临时文件
+/docs/.vuepress/.temp
+
+# VuePress 缓存文件
+/docs/.vuepress/.cache
+
+# VuePress 依赖文件
+/node_modules
+/package-lock.json
+
+# VuePress 静态文件
+/docs/.vuepress/dist
+
+# IDEA 缓存文件
+/.idea
+
+# Github 缓存文件
+/.github

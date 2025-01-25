@@ -11,6 +11,10 @@ work-document-blogs-frontend/package-lock.json
 
 # VuePress 静态文件
 work-document-blogs-frontend/docs/.vuepress/dist
+work-document-blogs-frontend/docs/.vuepress/dist.tar
+
+
+# VuePress 
 
 # IDEA 缓存文件
 work-document-blogs-frontend/.idea

@@ -460,43 +460,91 @@
 
 ## 2025-02-03
 
-- [x] 彻底完成在线题库系统
-- [x] 初步学习 Go 的使用
-- [x] 初步设计用户中心系统
+- [x] ~~彻底完成在线题库系统~~
+- [x] ~~初步学习 Go 的使用~~
+- [x] ~~初步设计用户中心系统~~
 
 ## 2025-02-04
 
-- [x] 发布 CSDN 博文
-- [x] 初步学习 Go 的大部分知识
-- [x] 观看《哪吒 2》
+- [x] ~~发布 CSDN 博文~~
+- [x] ~~初步学习 Go 的大部分知识~~
+- [x] ~~观看《哪吒 2》~~
 
 ## 2025-02-05
 
--   [x] 回广州
+-   [x] ~~回广州~~
 
 ## 2025-02-06
 
-- [x] 初步学完 Go 的剩余知识
-- [x] 彻底阅读《云计算基础与实践》
-- [x] 在两个平台里发布博文
-- [ ] 系统阅读微服务博文，并且发布文章
-- [ ] 系统学习 Kacos，并且尝试做部署
-- [ ] 系统学习 Gitea，并且尝试做部署
-- [ ] 整理关于 Linux 指令文章
-- [ ] 整理关于 Linux 内网穿透软件文章
-- [ ] 整理关于 Linux 容器技术软件文章
-- [ ] 阅读皓书中没有读完的部分(尤其是架构部分)
+- [x] ~~初步学完 Go 的剩余知识~~
+- [x] ~~彻底阅读《云计算基础与实践》~~
+- [x] ~~在两个平台里发布博文~~
+- [x] ~~系统阅读微服务博文，并且发布文章~~
+    -   [x] ~~https://martinfowler.com/articles/microservices.html~~
+    -   [x] ~~https://blog.csdn.net/wurenhai/article/details/37659335~~
+    -   [x] ~~https://aws.amazon.com/cn/microservices/~~
+    -   [x] ~~https://learn.microsoft.com/en-us/azure/architecture/guide/arhitecture-styles/microservices~~
+    -   [x] ~~https://www.vmware.com/topics/microservices~~
+
+## 2025-02-07
+
+-   [x] ~~系统学习 Gitea，并且尝试做部署~~
+-   [x] ~~部署 PG 数据库~~
+
+## 2025-02-08
+
+- [x] ~~系统学习 Nacos，并且尝试做部署~~
+- [x] ~~系统学习 MinIO，并且尝试做部署~~
+- [x] ~~系统学习 AList，并且尝试做部署~~
+- [x] ~~初次编写萌娘百科~~
+
+## 2025-02-09
+
+- [x] ~~整理耗叔资源~~
+
+- [x] ~~部署 Redis~~
+
+- [x] ~~修改文档结构~~
+
+- [x] ~~浏览器原理 https://coolshell.cn/articles/9666.html~~
+
+## 2025-02-10
+
+-   [x] ~~出门进行光合作用~~
+
+## 2025-02-11
+
+- [x] ~~Maven 的系统学习~~
+- [x] ~~发布双平台的博文~~
 
 
 
+- [ ] MyBatis 的系统学习
 - [ ] 阅读《创建 Go 模块》文档
+- [ ] 整理关于 Linux 指令文章
+- [ ] 整理关于 Linux 容器技术软件文章，发布博文
+- [ ] 对比微服务架构和 SOA 架构
+    -   [ ] https://www.f5.com/company/blog/nginx/introduction-to-microservices
+    -   [ ] https://dzone.com/articles/microservices-vs-soa-2
+    -   [ ] https://dzone.com/articles/microservices-vs-soa-is-there-any-difference-at-al
+    -   [ ] https://developer.ibm.com/depmodels/cloud/
+- [ ] 浏览器原理
+
+    - [ ] https://web.dev/articles/howbrowserswork?hl=zh-cn
+    - [ ] https://arvindr21.github.io/howBrowserWorks/#/
+    - [ ] https://taligarsiel.com/Projects/howbrowserswork1.htm#Communication_between_the_components
+
+
+- [ ] 编写 work-magic-circle
+- [ ] 编写 work-project-proxy
+
+
+
+
 - [ ] 系统学习《Java 核心卷 I》，制作笔记
-- [ ] 系统学习 MinIO，并且尝试做部署
-- [ ] 系统学习 Spring Boot，制作笔记
 - [ ] 系统学习 Elasticsearch，制作笔记
 - [ ] 系统学习 Hotkey，制作笔记
 - [ ] 系统学习 Sentinel，制作笔记
-- [ ] 系统学习 Sa-Token，制作笔记
 - [ ] 系统学习 Druid，制作笔记                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
 - [ ] 整合近期的资料进行新的学习调整
 - [ ] 编写工作室用户中心系统代码
@@ -511,9 +559,29 @@
 - [ ] 完善工作室考勤报销项目的所有逻辑，并且封装为 docker
 - [ ] 整理 Docker 笔记的细化
 - [ ] 重新规划对存储序列的挂载，编写集群编排文件
-- [ ] 完善工作室仿制微信项目的前端逻辑
+- [ ] 完善工作室仿制微信项目前端逻辑
 - [ ] 阅读《人月神话》
 - [ ] 阅读《浪潮之巅》
+
+微服务架构细节理论：
+
+-   [ ] https://www.redbooks.ibm.com/redbooks/pdfs/sg248357.pdf
+-   [ ] https://book.douban.com/subject/26772677/
+
+对比微服务架构和其他架构：
+
+-   [ ] https://www.stackbuilders.com/insights/the-hidden-costs-of-microservices/
+-   [ ] https://highscalability.com/microservices-not-a-free-lunch/
+-   [ ] https://www.slideshare.net/slideshow/microservices-vs-monolithic-architectures-pros-and-cons/43912347
+-   [ ] https://www.altoros.com/blog/paas-vs-iaas-for-microservices-architectures-top-6-differences/
+
+微服务最佳设计实践：
+
+-   [ ] https://microservices.io/
+-   [ ] https://www.oreilly.com/content/microservices-antipatterns-and-pitfalls/
+-   [ ] https://codingsans.com/blog/microservice-architecture-best-practices
+-   [ ] https://www.vinaysahni.com/best-practices-for-building-a-microservice-architecture
+-   [ ] https://jobs.zalando.com/en/tech/blog/simplicity-by-distributing-complexity
 
 :::
 

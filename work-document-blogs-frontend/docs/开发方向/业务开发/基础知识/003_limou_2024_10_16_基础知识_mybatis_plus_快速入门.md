@@ -40,7 +40,9 @@
 
 使用 `JDBC` 的好处是，各数据库厂商使用相同的接口，`Java` 代码不需要针对不同数据库分别开发。而且 `Java` 程序在编译期仅依赖 `java.sql` 包，不依赖具体数据库的 `.jar` 包。也可随时替换底层数据库，访问数据库的 `Java` 代码基本不变。说白了就是分层软件设计的好处，网络协议、操作系统...就是经典的例子。
 
-##### 3.1.1.2.接口
+##### 3.1.1.2.使用
+
+###### 3.1.1.2.1.基本接口
 
 |              | `java.sql`                                   | `javax.sql`                     |
 | ------------ | -------------------------------------------- | ------------------------------- |
@@ -68,37 +70,2536 @@ mysql  Ver 8.0.40-0ubuntu0.24.04.1 for Linux on x86_64 ((Ubuntu))
 
 ```
 
-在确定本机拥有以上环境后，使用 `Maven` 快速创建一个 `Java` 项目，并且使用以下 `pom.xml` 文件来导入 `JDBC` 对应的驱动依赖 `mysql-connector-java`。
+在确定本机拥有以上环境后，使用 `Maven` 快速创建一个 `Java` 项目。
+
+```shell
+# 创建项目
+$ mvn archetype:generate -DgroupId=com.work -DartifactId=work-jdbc-test -DarchetypeArtifactId=maven-archetype-quickstart -DarchetypeVersion=1.5 -DinteractiveMode=false
+
+```
+
+并且使用以下 `pom.xml` 文件来导入 `JDBC` 对应的驱动依赖 `mysql-connector-java`，这样在我们使用 `java.sql` 接口类时才能有对应的实现类。
 
 ```xml
-<dependency>
-    <groupId>mysql</groupId>
-    <artifactId>mysql-connector-java</artifactId>
-    <version>9.2.0</version>
-    <scope>runtime</scope>
-</dependency>
+<!-- pom.xml -->
+<!--
+ 'xmlns=' XML 命名空间
+ 'xmlns:xsi' XML Schema 实例命名空间
+ 'xsi:schemaLocation=' 指定 XML Schema 位置
+ 这些声明的主要作用是帮助 XML 解析器正确地验证和处理 Maven POM 文件，确保它符合 Maven 规范。
+ -->
+<project
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+         >
+    <!-- 指定 Maven 项目对象模型 POM 的版本 -->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 定义项目的所属组织 -->
+    <groupId>com.work</groupId>
+    <!-- 定义项目的具体名称 -->
+    <artifactId>work-project</artifactId>
+    <!-- 填写依赖的 Java 版本和使用的字符集 -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
+    <!-- 指定项目构建的打包类型为 .jar -->
+    <packaging>jar</packaging>
+    <!-- 定义项目的版本号 -->
+    <version>0.1.0</version>
+    <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
+    <name>work-project</name>
+    <!-- 填写为本项目制定的官方网址 -->
+    <url>https://work.com</url>
+    <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
+    <dependencies>
+        <!-- 依赖名称: 依赖官网/依赖源码 -->
 
+        <!-- Junit: https://junit.org/junit5/ -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope> <!-- 如果不指定 scope 会默认将依赖设置为 compile 生命阶段, 因此设置 scope 本质是确保某些依赖只在某个阶段被使用 -->
+        </dependency>
+        
+        <!-- JDBC: https://central.sonatype.com/artifact/com.mysql/mysql-connector-j -->
+        <dependency>
+          <groupId>com.mysql</groupId>
+          <artifactId>mysql-connector-j</artifactId>
+          <version>9.2.0</version>
+          <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+    <!-- 构建插件 -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <!-- 填写启动类 -->
+                            <Main-Class>com.work.App</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                    <descriptorRefs>
+                        <!-- 集成的最终 .jar 包名称 -->
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+```
+
+准备一个数据库中的数据表，并导入一些假数据。
+
+```sql
+-- work-jdbc-test.sql
+-- 创建数据库 work-jdbc-test
+DROP DATABASE IF EXISTS work_jdbc_test; -- 这里故意在数据库存在时直接删除整个数据库, 方便我们进行重复的调试
+CREATE DATABASE work_jdbc_test;
+
+-- 创建一个登录用户
+CREATE USER IF NOT EXISTS limou@'%' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON work_jdbc_test.* TO limou@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+-- 创建表 students
+USE work_jdbc_test;
+CREATE TABLE students (
+  id BIGINT AUTO_INCREMENT NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  gender TINYINT(1) NOT NULL,
+  grade INT NOT NULL,
+  score INT NOT NULL,
+  PRIMARY KEY(id)
+) Engine=INNODB DEFAULT CHARSET=UTF8;
+
+-- 插入初始数据
+INSERT INTO students (name, gender, grade, score) VALUES ('小明', 1, 1, 88);
+INSERT INTO students (name, gender, grade, score) VALUES ('小红', 1, 1, 95);
+INSERT INTO students (name, gender, grade, score) VALUES ('小军', 0, 1, 93);
+INSERT INTO students (name, gender, grade, score) VALUES ('小白', 0, 1, 100);
+INSERT INTO students (name, gender, grade, score) VALUES ('小牛', 1, 2, 96);
+INSERT INTO students (name, gender, grade, score) VALUES ('小兵', 1, 2, 99);
+INSERT INTO students (name, gender, grade, score) VALUES ('小强', 0, 2, 86);
+INSERT INTO students (name, gender, grade, score) VALUES ('小乔', 0, 2, 79);
+INSERT INTO students (name, gender, grade, score) VALUES ('小青', 1, 3, 85);
+INSERT INTO students (name, gender, grade, score) VALUES ('小王', 1, 3, 90);
+INSERT INTO students (name, gender, grade, score) VALUES ('小林', 0, 3, 91);
+INSERT INTO students (name, gender, grade, score) VALUES ('小贝', 0, 3, 77);
+
+```
+
+```shell
+# 创建数据库中的数据表并导入数据
+$ mysql -u root -p < work-jdbc-test.sql
 ```
 
 接下来我直接使用代码来教会您使用 `JDBC` 接口来调用 `JDBC Driver` 最终达到操作数据库的目的，看代码学起来会非常快，不是么。
 
 ```java
+// App.java
+package com.work;
+
+import java.sql.*;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello JDBC!");
+
+        // 1. 获取链接
+        // Connection 代表一个 JDBC 连接, 其实就是获得 Java 程序和 MySQL 直接的 TCP 连接
+        // 因此打开一个 Connection 时, 需要准备 url、user、passwd(根据厂家规定来设置), 这样才能成功连接
+        // 而连接到数据库的本 Java 程序其实也被叫做 MySQL 的客户端
+        String JDBC_URL = "jdbc:mysql://localhost:3306/work_jdbc_test";
+        String JDBC_USER = "limou";
+        String JDBC_PASSWORD = "123456";
+        try (Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) { // try 可以确保执行完毕后自动将比较昂贵的 conn 链接释放, 下面的 try 也是类似
+
+            // 2. 使用链接
+            try (Statement stmt = conn.createStatement()) { // 获取到 Statement 语句对象用于后续执行语句
+                String searchGender = "gender=1"; // 需要传递的筛选条件 gender 变量
+                try (ResultSet resu = stmt.executeQuery("SELECT id, grade, name, gender FROM students WHERE " + searchGender)) { // 拼接封装需要查询的原生查询语句的结果集
+                    int i = 0;
+                    while (resu.next()) { // 循环执行, resu.next() 用于判断是否有下一行数据并获取该行数据
+                        // 必须根据 SELECT 列的对应位置来调用 getxxx() 否则对应位置的数据类型不对将报错
+                        // 需要并且索引要从 1 开始, 可以理解为获取下一行
+                        long id = resu.getLong(1);
+                        long grade = resu.getLong(2);
+                        String name = resu.getString(3);
+                        int gender = resu.getInt(4);
+                        i++;
+                        System.out.println(i + ": " + id + " " + grade + " " + name + " " + gender);
+                    }
+
+                }
+                catch (SQLException e) {
+                    System.out.println("Error executing query: " + e.getMessage());
+                }
+
+            }
+            catch (SQLException e) {
+                System.out.println("Error creating statement: " + e.getMessage());
+            }
+
+        }
+        catch (SQLException e) {
+            System.out.println("Error connecting to database: " + e.getMessage());
+        }
+
+        // 关闭连接
+        // 由于 Connection 实现了 AutoCloseable 接口中的 void close(), 因此不管是否抛出异常都会在 try 中保证 conn.close() 的使用, 进而释放链接(而 Statement 和 ResultSet 这两个类也是类似, 无需我们进行手动释放)
+    }
+}
+
 ```
 
-以上我们就把常见的接口都实践了一遍，接下来就是检验我们成果的时候了，运行一下吧。
+以上我们就把常见的接口实践了一遍，接下来就是检验我们成果的时候了，运行一下吧。
 
 ```shell
+Hello JDBC!
+1: 1 1 小明 1
+2: 2 1 小红 1
+3: 5 2 小牛 1
+4: 6 2 小兵 1
+5: 9 3 小青 1
+6: 10 3 小王 1
 
 ```
 
+不过上面的代码是由 `SQL` 注入的风险的，因为万一上面的 `searchGender` 变量是用户传递的，你永远也不知道用户传递的是不是，使用 `PreparedStatement` 可以避免 `SQL` 注入，其实现原理是通过以下几个关键步骤来确保安全的。
+
+-   **SQL 语句和参数分离**：当我们使用 `PreparedStatement` 时，`SQL` 查询本身和用户输入的参数是分开的，`SQL` 查询语句使用占位符 (`?`) 来代替具体的参数值
+-   **预编译 SQL 语句**：`PreparedStatement` 会在传递 `SQL` 语句给数据库之前，先对 `SQL` 语句进行预编译，生成执行计划。预编译的过程确保了 `SQL` 语句的结构是固定的，无法被用户输入修改，这意味着 `SQL` 注入攻击无法通过拼接恶意 `SQL` 来改变查询语句的结构
+-   **绑定参数**：然后通过 `PreparedStatement` 的 `setXXX()` 方法（如 `setObject()`, `setString()`, `setInt()` 等）将用户输入的值绑定到 `SQL` 查询中的占位符上。这样，数据库会将用户输入的值视为单独的参数，而不是 `SQL` 代码，这意味着 SQL 查询中的 `?` 占位符会被实际的参数值替代，而不改变查询的逻辑结构
+-   **输入数据的转义处理**：`PreparedStatement` 会自动对绑定的参数进行处理，确保它们作为值而非 `SQL` 代码执行。具体来说，`PreparedStatement` 会对传入的参数值进行转义或编码处理，确保如果用户输入中含有特殊字符（例如单引号 `'`、分号 `;` 等）时，这些字符不会被当作 `SQL` 语句的一部分来执行。它们会被当作普通的数据处理，从而避免 `SQL` 注入攻击
+-   **执行查询**：一旦参数被绑定，数据库就会按预编译的 `SQL` 语句执行查询。数据库执行时会严格按照 `SQL` 语句的结构来处理，不会受到任何参数值的影响。
+
+因此上述的代码可以修改为如下的版本，以避免 `SQL` 注入。同时，我还加入了一些别的操作，让您快速理解 `JDBC` 中最为基本的操作。
+
+```java
+// App.java
+package com.work;
+
+import java.sql.*;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello JDBC!");
+
+        // 1. 获取链接
+        // Connection 代表一个 JDBC 连接, 其实就是获得 Java 程序和 MySQL 直接的 TCP 连接
+        // 因此打开一个 Connection 时, 需要准备 url、user、passwd(根据厂家规定来设置), 这样才能成功连接
+        // 而连接到数据库的本 Java 程序其实也被叫做 MySQL 的客户端
+        String JDBC_URL = "jdbc:mysql://localhost:3306/work_jdbc_test";
+        String JDBC_USER = "limou";
+        String JDBC_PASSWORD = "123456";
+        // try 可以确保执行完毕后自动将比较昂贵的 conn 链接释放, 下面的 try 也是类似
+        try (Connection conn = DriverManager.getConnection(
+                JDBC_URL,
+                JDBC_USER,
+                JDBC_PASSWORD
+        )) {
+            // 2. 使用链接
+            // (1) 做查询操作
+            // a. SQL 模板
+            String searchSql = "SELECT id, grade, name, gender FROM students WHERE gender=?";
+
+            // b. 数据传递
+            int searchGender = 0;
+
+            // c. 创建语句
+            try (PreparedStatement prep = conn.prepareStatement(searchSql)) {
+
+                // d. 绑定参数
+                prep.setInt(1, searchGender); // 使用 setXXX 方法绑定参数，避免 SQL 注入
+
+                // e. 执行语句
+                try (ResultSet resu = prep.executeQuery()) {
+                    int i = 0;
+                    while (resu.next()) {
+                        /*
+                        循环执行, resu.next() 用于判断是否有下一行数据并获取该行数据
+                        必须根据 SELECT 列的对应位置来调用 getxxx() 否则对应位置的数据类型不对将报错
+                        需要并且索引要从 1 开始, 可以理解为获取下一行
+                        */
+                        long id = resu.getLong(1);
+                        long grade = resu.getLong(2);
+                        String name = resu.getString(3);
+                        int gender = resu.getInt(4);
+                        i++;
+                        System.out.println(i + ": " + id + " " + grade + " " + name + " " + gender);
+                    }
+                }
+                catch (SQLException e) {
+                    System.out.println("Error executing query: " + e.getMessage());
+                }
+            }
+            catch (SQLException e) {
+                System.out.println("Error creating search statement: " + e.getMessage());
+            }
+
+            // (2) 做插入操作
+            // a. SQL 模板
+            String installSql = "INSERT INTO students (grade, name, gender, score) VALUES (?, ?, ?, ?)";
+
+            // b. 数据传递
+            int installGrade = 1;
+            String installName = "小某";
+            int installGender = 1;
+            int installScore = 100;
+
+            // c. 创建语句
+            long id = -1; // 存储一份下面插入记录的 id 值, 留作后续根据 id 值对该记录进行操作
+            try (PreparedStatement prep = conn.prepareStatement(
+                    installSql,
+                    Statement.RETURN_GENERATED_KEYS // 由于我没有指定传递 installId, 所以 MySQL 会自动增长 id 值, 因此这里设置的状态可以在插入后立刻获取到插入时的 id 值
+            )) {
+                // d. 绑定参数
+                prep.setInt(1, installGrade); // 需要传递的插入数据 installGrade 变量
+                prep.setString(2, installName); // 需要传递的插入数据 installName 变量
+                prep.setInt(3, installGender); // 需要传递的插入数据 installGender 变量
+                prep.setInt(4, installScore); // 需要传递的插入数据 installScore 变量
+
+                // e. 执行语句
+                int n = prep.executeUpdate();
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+
+                // 获取上述插入语句的 id 值
+                /*
+                或许有人会问根据其他字段来查询 id 不也可以么,
+                为何需要使用 Statement.RETURN_GENERATED_KEYS 和 prep.getGeneratedKeys(),
+                这难道不费劲么?
+                可问题是, 如果插入的两个记录除了 id 值其他数据都完全一模一样,
+                那么在并发场景下, 就会无法准确获取您所插入的记录的 id 值,
+                因此前面的两处做法保证了, 在任何场景下, 您都可以获取到您所插入记录的 id 值.
+                */
+                try (ResultSet resu = prep.getGeneratedKeys()) {
+                    if (resu.next()) {
+                        id = resu.getLong(1);
+                        System.out.println("Get value of id: " + id);
+                    }
+                    /*
+                    如果您前面使用了多个插入语句,
+                    那么只需要保证在同一个 PreparedStatement 插入里,
+                    且每次插入结束都使用 prep.addBatch() 做添加到批处理中,
+                    在 prep.executeBatch() 后,
+                    就可以使用 prep.getGeneratedKeys() 来进行多份 id 值获取
+                    */
+                }
+                catch (SQLException e) {
+                    System.out.println("Error executing id query: " + e.getMessage());
+                }
+            }
+            catch (SQLException e) {
+                System.out.println("Error creating install statement: " + e.getMessage());
+            }
+
+            // (3) 做修改操作
+            // a. SQL 模板
+            String updateSql = "UPDATE students SET name=? WHERE id=?";
+
+            // b. 数据传递
+            String updateName = "limou";
+            long updateId = id;
+
+            // c. 创建语句
+            try (PreparedStatement prep = conn.prepareStatement(updateSql)) {
+                // d. 绑定参数
+                prep.setString(1, updateName);
+                prep.setLong(2, updateId);
+
+                // e. 执行语句
+                int n = prep.executeUpdate();
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+            }
+            catch (SQLException e) {
+                System.out.println("Error creating update statement: " + e.getMessage());
+            }
+
+            // (4) 做删除操作
+            // a. SQL 模板
+            String deleteSql = "DELETE FROM students WHERE id=?";
+
+            // b. 数据传递
+            long deleteId = id;
+
+            // c. 创建语句
+            try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                // d. 绑定参数
+                ps.setLong(1, deleteId);
+
+                // e. 执行语句
+                int n = ps.executeUpdate();
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+            }
+            catch (SQLException e) {
+                System.out.println("Error creating delete statement: " + e.getMessage());
+            }
+
+            /*
+            其实从这里也可以观察出 JDBC 认为数据库基本操作只有查询和更新
+            */
+
+            // (5) 做事务操作
+            /*
+            数据库事务是由若干个 SQL 语句构成的一个操作序列,
+            数据库系统保证在一个事务中的所有 SQL 要么全部执行成功, 要么全部不执行,
+            即数据库事务具有 ACID 特性:
+            a.Atomicity: 原子性
+            b.Consistency: 一致性
+            c.Isolation: 隔离性
+            d.Durability: 持久性
+
+            而根据业务需要有以下四种隔离级别, 可以应对不同的场景
+            隔离级别    有脏读 不复读 有幻读
+            读未提交    可能会 可能会 可能会
+            读已提交    已解决 可能会 可能会
+            可重复读    已解决 已解决 可能会 (default)
+            可串行化    已解决 已解决 已解决
+
+            而我们之前执行的 sql 语句默认启动事务, 执行一次就提交一次,
+            因此而单条 sql 失败也会自动回滚该单条语句,
+            而如果我们关闭自动提交, 就需要我们自己来把控事务的提交时机以及失败时的回滚
+            */
+
+            // 设定隔离级别为READ COMMITTED:
+            // conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED); // 如果没有调用本方法, 那么会使用数据库的默认隔离级别, MySQL 默认隔离级别是 Connection.REPEATABLE_READ
+
+            // 关闭自动提交以自己把控时的执行长度
+            try {
+                // 关闭自动提交
+                conn.setAutoCommit(false);
+
+                // 执行多条 SQL 语句
+                // search
+                // insert
+                // update
+                // delete
+
+                // 提交事务:
+                conn.commit();
+            }
+            catch (SQLException e) {
+                // 出现异常需要回滚事务
+                System.out.println("Error database transaction: " + e.getMessage());
+                conn.rollback();
+            }
+            finally {
+                // 恢复自动提交
+                conn.setAutoCommit(true);
+            }
+        }
+        catch (SQLException e) {
+            System.out.println("Error connecting to database: " + e.getMessage());
+        }
+    }
+}
+
+```
+
+###### 3.1.1.2.2.链接池化
+
+这里还有再补充一些，链接是比较昂贵的资源，如果反复创建就会导致低效。因此我们需要有复用已经存在的链接的能力，那么我们就需要有一个连接池，这个连接池用 `Java` 来维护是最好的，比较出名的链接池技术就是引入 `HikariCP`，下面就是我们需要修改的 `pom.xml` 文件。
+
+```xml
+<!-- pom.xml -->
+<!--
+ 'xmlns=' XML 命名空间
+ 'xmlns:xsi' XML Schema 实例命名空间
+ 'xsi:schemaLocation=' 指定 XML Schema 位置
+ 这些声明的主要作用是帮助 XML 解析器正确地验证和处理 Maven POM 文件，确保它符合 Maven 规范。
+ -->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+  <!-- 指定 Maven 项目对象模型 POM 的版本 -->
+  <modelVersion>4.0.0</modelVersion>
+  <!-- 定义项目的所属组织 -->
+  <groupId>com.work</groupId>
+  <!-- 定义项目的具体名称 -->
+  <artifactId>work-project-test</artifactId>
+  <!-- 填写依赖的 Java 版本和使用的字符集 -->
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+  </properties>
+  <!-- 指定项目构建的打包类型为 .jar -->
+  <packaging>jar</packaging>
+  <!-- 定义项目的版本号 -->
+  <version>0.1.0</version>
+  <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
+  <name>work-project-test</name>
+  <!-- 填写为本项目制定的官方网址 -->
+  <url>https://work.com</url>
+  <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
+  <dependencies>
+    <!-- 依赖名称: 依赖官网/依赖源码 -->
+
+    <!-- Junit: https://junit.org/junit5/ -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.9.3</version>
+      <scope>test</scope> <!-- 如果不指定 scope 会默认将依赖设置为 compile 生命阶段, 因此设置 scope 本质是确保某些依赖只在某个阶段被使用 -->
+    </dependency>
+
+    <!-- JDBC: https://central.sonatype.com/artifact/com.mysql/mysql-connector-j -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>9.2.0</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- HikariCP: https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>6.2.1</version>
+    </dependency>
+
+    <!-- SLF4J: https://github.com/qos-ch/slf4j -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+    </dependency>
+
+    <!-- logback: https://github.com/qos-ch/logback -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.10</version>
+    </dependency>
+
+  </dependencies>
+  <!-- 构建插件 -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <!-- 填写启动类 -->
+              <Main-Class>com.work.App</Main-Class>
+            </manifestEntries>
+          </archive>
+          <descriptorRefs>
+            <!-- 集成的最终 .jar 包名称 -->
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+```
+
+>   [!WARNING]
+>
+>   注意：上述的日志其实是 `HikariCP` 中存在的日志组件，您需要一起引入以方便 `HikariCP` 打印一些日志信息。
+
+```java
+// App.java
+package com.work;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
+
+import java.sql.*;
+
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello JDBC!");
+
+        // 1. 获取链接
+        /*
+        Connection 代表一个 JDBC 连接, 其实就是获得 Java 程序和 MySQL 直接的 TCP 连接
+        因此打开一个 Connection 时, 需要准备 url、user、passwd(根据厂家规定来设置), 这样才能成功连接
+        而连接到数据库的本 Java 程序其实也被叫做 MySQL 的客户端
+        */
+        String JDBC_URL = "jdbc:mysql://localhost:3306/work_jdbc_test";
+        String JDBC_USER = "limou";
+        String JDBC_PASSWORD = "123456";
+
+        /* 这里新添加了连接池的设置, 改用连接池的方式来管理 MySQL */
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(JDBC_URL);
+        config.setUsername(JDBC_USER);
+        config.setPassword(JDBC_PASSWORD);
+        config.setMaximumPoolSize(10); // 本链接池最多允许的链接数为 10 个, 这一句代码和 config.addDataSourceProperty("maximumPoolSize", "10") 等价, 但是直接写字符串过于灵活有可能难以维护
+        config.setMinimumIdle(2); // 本链接池最少存在的链接接数为 2 个
+        config.setIdleTimeout(60000); // 如果链接空闲超时 60 秒就会被销毁无法再次被复用
+        config.setConnectionTimeout(1000); // 无法获得链接超时 1 秒时就会抛出异常, 以提示本链接池中链接资源紧缺, 超出最大的设置值
+
+        // 创建 DataSource 也是一个非常昂贵的操作, 所以通常 DataSource 实例总是作为一个全局变量存储, 并贯穿整个应用程序的生命周期
+        try (HikariDataSource hkds = new HikariDataSource(config)) {
+            // try 可以确保执行完毕后自动将比较昂贵的 conn 链接释放, 下面的 try 也是类似
+            try (
+                    Connection conn = hkds.getConnection()
+                    // Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)
+            ) {
+                // 2. 使用链接
+                /* 不过使用链接之前先检查一下我们的链接池状态 */
+                Connection tempConn = hkds.getConnection();
+                tempConn.close(); // 立刻打开并且关闭一个链接, 因为链接池不是一开始就创建两个链接的, 而是同时使用 2 条链接之后, 无论链接还有多少条再使用, 都会保留至少两个链接以供复用, 您可以注释掉这一句以查看后续打印的 totalConnections 是不是为 1, 如果没有注释就是 2
+
+                // 获取 HikariPoolMXBean 以获取连接池中的活动连接数、空闲连接数、最大连接数是否设置成功
+                HikariPoolMXBean poolMXBean = hkds.getHikariPoolMXBean();
+                int activeConnections = poolMXBean.getActiveConnections(); // 获取当前池中活动连接的数量, 预计为 1
+                int idleConnections = poolMXBean.getIdleConnections(); // 获取当前池中空闲连接的数量, 预计为 1
+                int totalConnections = poolMXBean.getTotalConnections(); // 获取连接池中的总连接数(包括活动连接和空闲连接), 预计为 2
+                int threadsAwaitingConnection = poolMXBean.getThreadsAwaitingConnection(); // 获取等待连接的线程数量(如果连接池中的连接已经被用尽, 这些线程会被阻塞直到有空闲连接可用), 预计为 0
+                System.out.println("Active connections: " + activeConnections);
+                System.out.println("Idle connections: " + idleConnections);
+                System.out.println("Total connections: " + totalConnections);
+                System.out.println("Threads awaiting connections: " + threadsAwaitingConnection);
+
+                // (1) 做查询操作
+                // a. SQL 模板
+                String searchSql = "SELECT id, grade, name, gender FROM students WHERE gender=?";
+
+                // b. 数据传递
+                int searchGender = 0;
+
+                // c. 创建语句
+                try (PreparedStatement prep = conn.prepareStatement(searchSql)) {
+
+                    // d. 绑定参数
+                    prep.setInt(1, searchGender); // 使用 setXXX 方法绑定参数，避免 SQL 注入
+
+                    // e. 执行语句
+                    try (ResultSet resu = prep.executeQuery()) {
+                        int i = 0;
+                        while (resu.next()) {
+                            /*
+                            循环执行, resu.next() 用于判断是否有下一行数据并获取该行数据
+                            必须根据 SELECT 列的对应位置来调用 getxxx() 否则对应位置的数据类型不对将报错
+                            需要并且索引要从 1 开始, 可以理解为获取下一行
+                            */
+                            long id = resu.getLong(1);
+                            long grade = resu.getLong(2);
+                            String name = resu.getString(3);
+                            int gender = resu.getInt(4);
+                            i++;
+                            System.out.println(i + ": " + id + " " + grade + " " + name + " " + gender);
+                        }
+                    }
+                    catch (SQLException e) {
+                        System.out.println("Error executing query: " + e.getMessage());
+                    }
+                }
+                catch (SQLException e) {
+                    System.out.println("Error creating search statement: " + e.getMessage());
+                }
+
+                // (2) 做插入操作
+                // a. SQL 模板
+                String installSql = "INSERT INTO students (grade, name, gender, score) VALUES (?, ?, ?, ?)";
+
+                // b. 数据传递
+                int installGrade = 1;
+                String installName = "小某";
+                int installGender = 1;
+                int installScore = 100;
+
+                // c. 创建语句
+                long id = -1; // 存储一份下面插入记录的 id 值, 留作后续根据 id 值对该记录进行操作
+                try (PreparedStatement prep = conn.prepareStatement(
+                        installSql,
+                        Statement.RETURN_GENERATED_KEYS // 由于我没有指定传递 installId, 所以 MySQL 会自动增长 id 值, 因此这里设置的状态可以在插入后立刻获取到插入时的 id 值
+                )) {
+                    // d. 绑定参数
+                    prep.setInt(1, installGrade); // 需要传递的插入数据 installGrade 变量
+                    prep.setString(2, installName); // 需要传递的插入数据 installName 变量
+                    prep.setInt(3, installGender); // 需要传递的插入数据 installGender 变量
+                    prep.setInt(4, installScore); // 需要传递的插入数据 installScore 变量
+
+                    // e. 执行语句
+                    int n = prep.executeUpdate();
+                    if (n > 0) {
+                        System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                    } else if (n == 0) {
+                        System.out.println("执行成功，但是没有影响到任何数据");
+                    } else /* n < 0 */ {
+                        System.out.println("执行成功，但是执行和行无关的操作");
+                    }
+
+                    // 获取上述插入语句的 id 值
+                    /*
+                    或许有人会问根据其他字段来查询 id 不也可以么,
+                    为何需要使用 Statement.RETURN_GENERATED_KEYS 和 prep.getGeneratedKeys(),
+                    这难道不费劲么?
+                    可问题是, 如果插入的两个记录除了 id 值其他数据都完全一模一样,
+                    那么在并发场景下, 就会无法准确获取您所插入的记录的 id 值,
+                    因此前面的两处做法保证了, 在任何场景下, 您都可以获取到您所插入记录的 id 值.
+                    */
+                    try (ResultSet resu = prep.getGeneratedKeys()) {
+                        if (resu.next()) {
+                            id = resu.getLong(1);
+                            System.out.println("Get value of id: " + id);
+                        }
+                        /*
+                        如果您前面使用了多个插入语句,
+                        那么只需要保证在同一个 PreparedStatement 插入里,
+                        且每次插入结束都使用 prep.addBatch() 做添加到批处理中,
+                        在 prep.executeUpdate() 后,
+                        就可以使用 prep.getGeneratedKeys() 来进行多份 id 值获取
+                        */
+                    }
+                    catch (SQLException e) {
+                        System.out.println("Error executing id query: " + e.getMessage());
+                    }
+                }
+                catch (SQLException e) {
+                    System.out.println("Error creating install statement: " + e.getMessage());
+                }
+
+                // (3) 做修改操作
+                // a. SQL 模板
+                String updateSql = "UPDATE students SET name=? WHERE id=?";
+
+                // b. 数据传递
+                String updateName = "limou";
+                long updateId = id;
+
+                // c. 创建语句
+                try (PreparedStatement prep = conn.prepareStatement(updateSql)) {
+                    // d. 绑定参数
+                    prep.setString(1, updateName);
+                    prep.setLong(2, updateId);
+
+                    // e. 执行语句
+                    int n = prep.executeUpdate();
+                    if (n > 0) {
+                        System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                    } else if (n == 0) {
+                        System.out.println("执行成功，但是没有影响到任何数据");
+                    } else /* n < 0 */ {
+                        System.out.println("执行成功，但是执行和行无关的操作");
+                    }
+                }
+                catch (SQLException e) {
+                    System.out.println("Error creating update statement: " + e.getMessage());
+                }
+
+                // (4) 做删除操作
+                // a. SQL 模板
+                String deleteSql = "DELETE FROM students WHERE id=?";
+
+                // b. 数据传递
+                long deleteId = id;
+
+                // c. 创建语句
+                try (PreparedStatement ps = conn.prepareStatement(deleteSql)) {
+                    // d. 绑定参数
+                    ps.setLong(1, deleteId);
+
+                    // e. 执行语句
+                    int n = ps.executeUpdate();
+                    if (n > 0) {
+                        System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                    } else if (n == 0) {
+                        System.out.println("执行成功，但是没有影响到任何数据");
+                    } else /* n < 0 */ {
+                        System.out.println("执行成功，但是执行和行无关的操作");
+                    }
+                }
+                catch (SQLException e) {
+                    System.out.println("Error creating delete statement: " + e.getMessage());
+                }
+
+                /*
+                其实从这里也可以观察出 JDBC 认为数据库基本操作只有查询和更新
+                */
+
+                // (5) 做事务操作
+                /*
+                数据库事务是由若干个 SQL 语句构成的一个操作序列,
+                数据库系统保证在一个事务中的所有 SQL 要么全部执行成功, 要么全部不执行,
+                即数据库事务具有 ACID 特性:
+                a.Atomicity: 原子性
+                b.Consistency: 一致性
+                c.Isolation: 隔离性
+                d.Durability: 持久性
+
+                而根据业务需要有以下四种隔离级别, 可以应对不同的场景
+                隔离级别    有脏读 不复读 有幻读
+                读未提交    可能会 可能会 可能会
+                读已提交    已解决 可能会 可能会
+                可重复读    已解决 已解决 可能会 (default)
+                可串行化    已解决 已解决 已解决
+
+                而我们之前执行的 sql 语句默认启动事务, 执行一次就提交一次,
+                因此而单条 sql 失败也会自动回滚该单条语句,
+                而如果我们关闭自动提交, 就需要我们自己来把控事务的提交时机以及失败时的回滚
+                */
+
+                // 设定隔离级别为READ COMMITTED:
+                // conn.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED); // 如果没有调用本方法, 那么会使用数据库的默认隔离级别, MySQL 默认隔离级别是 Connection.REPEATABLE_READ
+
+                // 关闭自动提交以自己把控时的执行长度
+                try {
+                    // 关闭自动提交
+                    conn.setAutoCommit(false);
+
+                    // 执行多条 SQL 语句
+                    // search
+                    // insert
+                    // update
+                    // delete
+
+                    // 提交事务:
+                    conn.commit();
+                }
+                catch (SQLException e) {
+                    // 出现异常需要回滚事务
+                    System.out.println("Error database transaction: " + e.getMessage());
+                    conn.rollback();
+                }
+                finally {
+                    // 恢复自动提交
+                    conn.setAutoCommit(true);
+                }
+            }
+            catch (SQLException e) {
+                System.out.println("Error connecting to database: " + e.getMessage());
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error creating hikariDataSource: " + e.getMessage());
+        }
+    }
+}
+
+```
+
+```shell
+# 运行结果
+/usr/lib/jvm/java-1.17.0-openjdk-amd64/bin/java -javaagent:/snap/intellij-idea-ultimate/567/lib/idea_rt.jar=33031:/snap/intellij-idea-ultimate/567/bin -Dfile.encoding=UTF-8 -classpath /home/ljp/data/ljp/test/work-jdbc-test/target/classes:/home/ljp/.m2/repository/com/mysql/mysql-connector-j/9.2.0/mysql-connector-j-9.2.0.jar:/home/ljp/.m2/repository/com/google/protobuf/protobuf-java/4.29.0/protobuf-java-4.29.0.jar:/home/ljp/.m2/repository/com/zaxxer/HikariCP/6.2.1/HikariCP-6.2.1.jar:/home/ljp/.m2/repository/org/slf4j/slf4j-api/1.7.36/slf4j-api-1.7.36.jar:/home/ljp/.m2/repository/ch/qos/logback/logback-classic/1.4.12/logback-classic-1.4.12.jar:/home/ljp/.m2/repository/ch/qos/logback/logback-core/1.4.12/logback-core-1.4.12.jar com.work.App
+Hello JDBC!
+12:33:12.421 [main] DEBUG com.zaxxer.hikari.HikariConfig - HikariPool-1 - configuration:
+12:33:12.431 [main] DEBUG com.zaxxer.hikari.HikariConfig - allowPoolSuspension.............false
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - autoCommit......................true
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - catalog.........................none
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - connectionInitSql...............none
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - connectionTestQuery.............none
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - connectionTimeout...............1000
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - credentials.....................com.zaxxer.hikari.util.Credentials@3f102e87
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - dataSource......................none
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - dataSourceClassName.............none
+12:33:12.432 [main] DEBUG com.zaxxer.hikari.HikariConfig - dataSourceJNDI..................none
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - dataSourceProperties............{password=<masked>}
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - driverClassName.................none
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - exceptionOverride...............none
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - exceptionOverrideClassName......none
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - healthCheckProperties...........{}
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - healthCheckRegistry.............none
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - idleTimeout.....................60000
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - initializationFailTimeout.......1
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - isolateInternalQueries..........false
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - jdbcUrl.........................jdbc:mysql://localhost:3306/work_jdbc_test
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - keepaliveTime...................120000
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - leakDetectionThreshold..........0
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - maxLifetime.....................1800000
+12:33:12.433 [main] DEBUG com.zaxxer.hikari.HikariConfig - maximumPoolSize.................10
+12:33:12.434 [main] DEBUG com.zaxxer.hikari.HikariConfig - metricRegistry..................none
+12:33:12.434 [main] DEBUG com.zaxxer.hikari.HikariConfig - metricsTrackerFactory...........none
+12:33:12.434 [main] DEBUG com.zaxxer.hikari.HikariConfig - minimumIdle.....................2
+12:33:12.434 [main] DEBUG com.zaxxer.hikari.HikariConfig - password........................<masked>
+12:33:12.437 [main] DEBUG com.zaxxer.hikari.HikariConfig - poolName........................"HikariPool-1"
+12:33:12.437 [main] DEBUG com.zaxxer.hikari.HikariConfig - readOnly........................false
+12:33:12.437 [main] DEBUG com.zaxxer.hikari.HikariConfig - registerMbeans..................false
+12:33:12.437 [main] DEBUG com.zaxxer.hikari.HikariConfig - scheduledExecutor...............none
+12:33:12.437 [main] DEBUG com.zaxxer.hikari.HikariConfig - schema..........................none
+12:33:12.437 [main] DEBUG com.zaxxer.hikari.HikariConfig - threadFactory...................internal
+12:33:12.438 [main] DEBUG com.zaxxer.hikari.HikariConfig - transactionIsolation............default
+12:33:12.438 [main] DEBUG com.zaxxer.hikari.HikariConfig - username........................"limou"
+12:33:12.438 [main] DEBUG com.zaxxer.hikari.HikariConfig - validationTimeout...............5000
+12:33:12.439 [main] INFO com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+12:33:12.464 [main] DEBUG com.zaxxer.hikari.util.DriverDataSource - Loaded driver with class name com.mysql.cj.jdbc.Driver for jdbcUrl=jdbc:mysql://localhost:3306/work_jdbc_test
+12:33:12.478 [main] DEBUG com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Attempting to create/setup new connection (73347677-fb44-4a3c-aa28-b089d6e1bf7d)
+12:33:12.736 [main] DEBUG com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Established new connection (73347677-fb44-4a3c-aa28-b089d6e1bf7d)
+12:33:12.737 [main] INFO com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@fa49800
+12:33:12.739 [main] INFO com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+12:33:12.740 [HikariPool-1:connection-adder] DEBUG com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Attempting to create/setup new connection (d77d7a0d-16cf-4cac-a20a-f2a0f53c00be)
+12:33:12.773 [HikariPool-1:connection-adder] DEBUG com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Established new connection (d77d7a0d-16cf-4cac-a20a-f2a0f53c00be)
+12:33:12.773 [HikariPool-1:connection-adder] DEBUG com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@4c457d14
+Active connections: 1
+Idle connections: 1
+Total connections: 2
+Threads awaiting connections: 0
+1: 3 1 小军 0
+2: 4 1 小白 0
+3: 7 2 小强 0
+4: 8 2 小乔 0
+5: 11 3 小林 0
+6: 12 3 小贝 0
+执行成功，并且影响到了 1 行数据
+Get value of id: 1018
+执行成功，并且影响到了 1 行数据
+执行成功，并且影响到了 1 行数据
+12:33:12.827 [main] INFO com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+12:33:12.828 [main] DEBUG com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Before shutdown stats (total=2/10, idle=2/2, active=0, waiting=0)
+12:33:12.835 [HikariPool-1:connection-closer] DEBUG com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Closing connection com.mysql.cj.jdbc.ConnectionImpl@fa49800: (connection evicted)
+12:33:12.839 [HikariPool-1:connection-closer] DEBUG com.zaxxer.hikari.pool.PoolBase - HikariPool-1 - Closing connection com.mysql.cj.jdbc.ConnectionImpl@4c457d14: (connection evicted)
+12:33:12.840 [main] DEBUG com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - After shutdown stats (total=0/10, idle=0/2, active=0, waiting=0)
+12:33:12.840 [main] INFO com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+
+进程已结束，退出代码为 0
+
+```
+
+这样我们才真正的把所有大部分的 `JDBC` 程序的大部分书写模板给了出来，并且都尝试进行了使用。
+
+>   [!NOTE]
+>
+>   吐槽：关于链接池是否需要被关闭，其实我有点不太确定，一方面链接池一般跟随整个项目周期，除非项目挂掉，但此时一定会自动关闭；另外一方面链接池貌似没有实现 `AutoCloseable`，我没有特别认真翻阅官方的源代码，但也许是官方也认为不需要 `AutoCloseable`？这样做会导致无法在 `try` 块以外自动关闭链接池...以后再来研究吧，至少现在根本不需要过分究竟上面的问题 😉。
+
 #### 3.1.2.MyBatis
+
+##### 3.1.2.1.理解
+
+`MyBatis` 是一款优秀的持久层框架，它支持自定义 `SQL`、存储过程以及高级映射。`MyBatis` 免除了几乎所有的 `JDBC` 代码以及设置参数和获取结果集的工作。`MyBatis` 可以通过简单的 `XML` 或注解来配置和映射：
+
+-   原始类型
+-   接口
+-   `POJO` 对象
+
+>   [!IMPORTANT]
+>
+>   补充：其中 `Java POJO, Plain Old Java Objects, 普通老式 Java 对象` 指代 **不依赖于任何特定框架、类库或技术** 的普通 `Java` 类。`POJO` 的主要特点是没有特殊的约束，它只是一个简单的 `Java` 对象，包含字段和方法，通常用于数据封装或作为应用程序的数据模型。可以作为数据库中的数据记录，`POJO` 通常都是用来简单的表述数据，一个 `POJO` 对象所对应的类通常有如下结构。
+>
+>   ```java
+>   // 一个 User POJO 的例子
+>   public class User {
+>       private int id;
+>       private String name;
+>       
+>       // 无参构造函数
+>       public User() {}
+>       
+>       // 带参构造函数
+>       public User(int id, String name) {
+>           this.id = id;
+>           this.name = name;
+>       }
+>   
+>       // Getter() 和 Setter()
+>       public int getId() {
+>           return id;
+>       }
+>   
+>       public void setId(int id) {
+>           this.id = id;
+>       }
+>   
+>       public String getName() {
+>           return name;
+>       }
+>   
+>       public void setName(String name) {
+>           this.name = name;
+>       }
+>   
+>       // 重写 toString()
+>       @Override
+>       public String toString() {
+>           return "User{id=" + id + ", name='" + name + "'}";
+>       }
+>   }
+>   
+>   ```
+>
+>   而 `Oracle` 提出的 `JavaBean` 则是对 `POJO` 的规范化，它对 `POJO` 提出了更多的设计要求，使得它适合在 `Java EE` 和其他框架中使用。因此，`JavaBean` 是符合一定规则的 `POJO`。其主要特点（规范）包括：
+>
+>   1.  **无参构造函数**：`JavaBean` 必须有一个公共的无参构造函数。
+>   2.  **私有属性**：类的属性必须是私有的（`private`），并且通过公共的 `getter()` 和 `setter()` 来访问。
+>   3.  **getter 和 setter 方法**：`JavaBean` 必须提供公共的 `getter()` 和 `setter()`，以便于外部访问和修改属性。
+>   4.  **可序列化**：`JavaBean` 通常要求实现 `Serializable` 接口，这样它就可以被序列化为字节流，从而方便在网络上传输或持久化存储。
+>
+>   因此上面的 `POJO` 还不是一个严格的 `JavaBean`，还需要进行进一步的改写。
+>
+>   ```java
+>   // 一个 User Bean 的例子
+>   import java.io.Serializable;
+>   
+>   public class User implements Serializable {
+>       private int id;
+>       private String name;
+>       
+>       // 无参构造函数
+>       public User() {}
+>       
+>       // 带参构造函数
+>       public User(int id, String name) {
+>           this.id = id;
+>           this.name = name;
+>       }
+>   
+>       // Getter 和 Setter 方法
+>       public int getId() {
+>           return id;
+>       }
+>   
+>       public void setId(int id) {
+>           this.id = id;
+>       }
+>   
+>       public String getName() {
+>           return name;
+>       }
+>   
+>       public void setName(String name) {
+>           this.name = name;
+>       }
+>   
+>       // 重写 toString() 方法
+>       @Override
+>       public String toString() {
+>           return "User{id=" + id + ", name='" + name + "'}";
+>       }
+>   }
+>   
+>   ```
+>
+>   不过确实，`import java.io.Serializable;` 引入了一个外部的 `Java` 类库，这本质上是一种依赖。但在 `Java` 中，**`Serializable`** 是一个非常基础的接口，属于 `Java` 标准库的一部分，它并不是依赖于任何外部框架或库，因此它并不算是对第三方框架的依赖，所有上面代码整体还是符合 `Bean` 的定义。
+
+使用了 `JDBC` 我们就可以感受到一些事情了，为什么使用 `MyBatis` 替代 `JDBC` 作为我们项目的开发呢？主要有以下理由：
+
+-   **简化 SQL 操作** `JDBC` 需要我们手动编写大量的 `SQL` 语句，并将结果集（`ResultSet`）与 `Java` 对象（我们上面的代码是没有把读取到的记录中的每一个字段转化为一个记录对象的，这和 `Java` 一切皆对象的思想有些许脱离）进行手动映射，代码冗长且容易出错。`MyBatis` 提供了一个简单的自动映射机制，通过 `XML` 或注解的方式直接将 `SQL` 语句与 `Java` 对象进行绑定和映射，大大减少了手动操作的复杂性。
+-   **动态 SQL 支持** `JDBC` 中，动态 `SQL` 的编写非常繁琐，需要根据不同的条件构造 `SQL` 字符串，这使得代码复杂且容易出错。`MyBatis` 提供了内置的动态 `SQL` 支持，可以通过 `<if>`、`<choose>`、`<where>` 等标签来动态生成 `SQL`，简化了条件查询、分页等操作的代码编写。
+-   **SQL 语句复用** 在 `JDBC` 中，每个操作都需要写出完整的 `SQL` 语句，很多相似的查询或更新操作需要重复编写相同的 `SQL` 代码。`MyBatis` 支持 `SQL` 语句的复用，可以将公共的 `SQL` 语句提取到 `<sql>` 标签中，方便重用，减少了冗余代码，提高了代码的可维护性。
+-   **易于集成与拓展** `JDBC` 是一个底层 `API`，虽然非常灵活，但它本身缺乏很多高级功能（如缓存、延迟加载等），需要手动编写大量的代码来实现这些功能。`MyBatis` 提供了开箱即用的缓存机制、延迟加载等功能，还可以与其他框架如 `Spring` 轻松集成，提高了开发效率。
+-   **支持事务管理** `JDBC` 中，事务管理需要显式地处理 `commit`、`rollback` 和 `setAutoCommit` 等操作，容易出错。`MyBatis` 与 `Spring` 框架集成后，能够自动进行事务管理，减少了手动管理事务的工作量。
+
+##### 3.1.2.2.使用
+
+###### 3.1.2.2.1.基本配置
+
+我们重新创建一个项目用来演示 `MyBatis` 的使用，和 `JDBC` 的使用一样，先把 `MyBatis` 一整套流程过一遍，再来进行加强。
+
+```shell
+# 创建项目
+```
+
+然后根据我们的 `Maven` 模板来修改依赖的引入，首要就是引入 `MyBatis` 依赖，而由于 `MyBatis` 底层依赖 `JDBC`，因此也需要引入关于 `MySQL` 的驱动实现。
+
+```xml
+<!-- pom.xml -->
+<!--
+ 'xmlns=' XML 命名空间
+ 'xmlns:xsi' XML Schema 实例命名空间
+ 'xsi:schemaLocation=' 指定 XML Schema 位置
+ 这些声明的主要作用是帮助 XML 解析器正确地验证和处理 Maven POM 文件，确保它符合 Maven 规范。
+ -->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+    <!-- 指定 Maven 项目对象模型 POM 的版本 -->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 定义项目的所属组织 -->
+    <groupId>com.work</groupId>
+    <!-- 定义项目的具体名称 -->
+    <artifactId>work-mybatis-test</artifactId>
+    <!-- 填写依赖的 Java 版本和使用的字符集 -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
+    <!-- 指定项目构建的打包类型为 .jar -->
+    <packaging>jar</packaging>
+    <!-- 定义项目的版本号 -->
+    <version>0.1.0</version>
+    <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
+    <name>work-mybatis-test</name>
+    <!-- 填写为本项目制定的官方网址 -->
+    <url>https://work.com</url>
+    <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
+    <dependencies>
+        <!-- 依赖名称: 依赖官网/依赖源码 -->
+
+        <!-- Junit: https://junit.org/junit5/ -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope> <!-- 如果不指定 scope 会默认将依赖设置为 compile 生命阶段, 因此设置 scope 本质是确保某些依赖只在某个阶段被使用 -->
+        </dependency>
+
+        <!-- MyBatis: https://github.com/mybatis/mybatis-3/releases -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.19</version>
+        </dependency>
+
+        <!-- JDBC: https://central.sonatype.com/artifact/com.mysql/mysql-connector-j -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+    <!-- 构建插件 -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <!-- 填写启动类 -->
+                            <Main-Class>com.work.App</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                    <descriptorRefs>
+                        <!-- 集成的最终 .jar 包名称 -->
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+```
+
+然后配置 `MyBatis` 的相关配置，配置 `MyBatis` 的方式有两种，一种是在 `XML` 文件中配置，一种是在 `Java` 程序中配置。
+
+###### 3.1.2.2.2.会话操作
+
+每个基于 `MyBatis` 的应用都是以一个 `SqlSessionFactory` 的实例为核心的。`SqlSessionFactory` 的实例可以通过 `SqlSessionFactoryBuilder` 获得。而 `SqlSessionFactoryBuilder` 则可以从 `XML` 配置文件或一个预先配置的 `Configuration` 实例来构建出 `SqlSessionFactory` 实例。
+
+```mermaid
+graph LR
+
+XML -->|"进而获得"| SqlSessionFactoryBuilder
+Configuration -->|"进而获得"| SqlSessionFactoryBuilder
+SqlSessionFactoryBuilder -->|"进而构建"| SqlSessionFactory
+
+```
+
+>   [!WARNING]
+>
+>   注意：我们先使用 `XML` 的形式来配置 `MyBatis`，虽然本人比较讨厌 `XML` 的使用，但是这确实是 `MyBatis` 的早期配置方式，在后续的 `MyBatis` 发展中，主要在 `Java` 程序中配置，这更加灵活。
+>
+>   因此下面代码中使用的 `.xml` 文件后续会被尽可能转化为 `.java` 文件。
+
+>   [!CAUTION]
+>
+>   警告：下面的 `mybatis_config.xml` 和 `db.properties` 都存储在 `./main/resource/` 下。
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?> <!-- mybatis-config.xml -->
+<!DOCTYPE
+    configuration
+    PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+    "https://mybatis.org/dtd/mybatis-3-config.dtd"
+>
+<configuration>
+    <!-- 引入外部的 db.properties 配置文件 -->
+    <properties resource="db.properties"/>
+    <!-- 指定 MyBatis 应用的运行环境, default 属性用于设置默认的环境 -->
+    <environments default="development">
+
+        <!-- 开发环境 -->
+        <environment id="development">
+            <!-- 指定事务管理器的类型为 JDBC, 表示 MyBatis 使用 JDBC 来管理数据库事务 -->
+            <transactionManager type="JDBC"/>
+            <!-- 配置了数据库连接池为 POOLED, 表示 MyBatis 使用由 MyBatis 提供的内置连接池 POOLED 连接池 -->
+            <dataSource type="POOLED">
+                <property name="driver" value="${driver}"/>
+                <property name="url" value="${url}"/>
+                <property name="username" value="${username}"/>
+                <property name="password" value="${password}"/>
+            </dataSource>
+        </environment>
+
+    </environments>
+    <!-- 指定 MyBatis 应用的 Mapper 映射 -->
+    <mappers>
+        <mapper resource="mapper/students_mapper.xml"/>
+    </mappers>
+</configuration>
+
+```
+
+`db.properties` 文件的内容如下，以填充上述 `mybati_config.xml` 中的。
+
+```properties
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/work_jdbc_test
+username=limou
+password=123456
+
+```
+
+可以注意到，我这里使用的是之前 `JDBC` 测试中使用的数据库和账号，利用这些已有的数据进行测试比较方便。而具体的 `Mapper` 映射文件下面继续再来编写。
+
+###### 3.1.2.2.3.映射文件
+
+在 `main/resource/mapper/` 目录下，编写文件 `students_mapper.xml`，具体内容如下，其实就是提供了 `SQL` 模板以供后续的映射来使用。
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?> <!-- students_mapper.xml -->
+<!DOCTYPE
+        mapper
+        PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd"
+        >
+<mapper namespace="com.work.mapper.StudentsMapper">
+    <!-- 如果本配置文件对应的 Mapper 类中定义的方法声明中有传递参数, 传递的如果是普通参数则会自动填充到 #{} 中, 传递的如果是对象参数则会解析类对象属性来填充到 #{} 中 -->
+
+    <!-- 查询所有学生 -->
+    <select id="selectAllStudents" resultType="com.work.model.Student"> <!-- resultType 标签会自动把查询到的结果字段映射会用户定义的 Bean 类对象 -->
+        SELECT id, name, gender, grade, score
+        FROM students
+    </select>
+
+    <!-- 根据学生 ID 查询 -->
+    <select id="selectStudentById" resultType="com.work.model.Student">
+        SELECT id, name, gender, grade, score
+        FROM students
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据年级查询学生 -->
+    <select id="selectStudentsByGrade" resultType="com.work.model.Student">
+        SELECT id, name, gender, grade, score
+        FROM students
+        WHERE grade = #{grade}
+    </select>
+
+    <!-- 插入新学生 -->
+    <!--
+    1. useGeneratedKeys="true"
+    useGeneratedKeys 属性告诉 MyBatis 使用 JDBC 的 getGeneratedKeys(),
+    来获取数据库自动生成的主键值(通常是自增主键),
+    当插入一条记录时, 数据库可能会自动生成一个主键,
+    设置这个属性为 true, MyBatis 会自动获取这个生成的主键, 并将其返回给 Java 对象
+    
+    2. keyProperty="id"
+    keyProperty 属性指定的是 Java 对象中哪个字段应该接收自动生成的主键值
+    通常数据库表会为主键字段自动生成一个值,
+    keyProperty 会告诉 MyBatis 将生成的主键值设置到 Java Bean 对象的哪个属性中
+    -->
+    <insert id="insertStudent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO students (name, gender, grade, score)
+        VALUES (#{name}, #{gender}, #{grade}, #{score})
+    </insert>
+
+    <!-- 更新学生信息 -->
+    <update id="updateStudent">
+        UPDATE students
+        SET name = #{name}, gender = #{gender}, grade = #{grade}, score = #{score}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 删除学生 -->
+    <delete id="deleteStudent">
+        DELETE FROM students
+        WHERE id = #{id}
+    </delete>
+
+</mapper>
+
+```
+
+有了映射配置文件，就需要定义一个关于映射的类文件 `./main/java/mapper/studentsMapper.java`，方便 `Java` 程序使用上述可以经过映射的 `SQL` 模板。注意每个模板标签中的 `id="xxx"` 要和 `studentMapper.java` 类中定义的方法名字完全相同。否则映射无法生效到方法上。
+
+```java
+// StudentsMapper.java
+package com.work.mapper;
+
+import com.work.model.Student;
+
+import java.util.List;
+
+public interface StudentsMapper {
+    List<Student> selectAllStudents();
+
+    Student selectStudentById(int id);
+
+    List<Student> selectStudentsByGrade(String grade);
+
+    int insertStudent(Student student);
+
+    int updateStudent(Student student);
+
+    int deleteStudent(int id);
+}
+
+```
+
+###### 3.1.2.2.4.数据描述
+
+我们还差一个描述单个实体 `Studen` 的 `Java Bean` 类，这个文件位置为 `./main/java/model/Studen.java`。有了这个 `Bean` 后，我们才能更加方便我们的 **参数传递中自动进行转化**，来进一步方便我们贯彻对数据库采用面向对象管理的思想。
+
+```java
+// Student.java
+package com.work.model;
+
+public class Student {
+    private Integer id;       // 学生ID
+    private String name;      // 学生姓名
+    private String gender;    // 学生性别
+    private String grade;     // 学生年级
+    private Double score;     // 学生成绩
+
+    // 无参构造方法
+    public Student() {}
+
+    // 带参数的构造方法
+    public Student(Integer id, String name, String gender, String grade, Double score) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.grade = grade;
+        this.score = score;
+    }
+
+    // Getter 和 Setter 方法
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public Double getScore() {
+        return score;
+    }
+
+    public void setScore(Double score) {
+        this.score = score;
+    }
+
+    // toString 方法，方便调试
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
+                ", grade='" + grade + '\'' +
+                ", score=" + score +
+                '}';
+    }
+}
+
+```
+
+###### 3.1.2.2.5.操作数据
+
+最后再次确认下我们的文件位置，确认完毕后我们就要开始编写主类来操作数据库了。
+
+```shell
+# 确认文件位置
+$ tree work-mybatis-test
+work-mybatis-test
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java/
+    │   │   └── com/
+    │   │       └── work/
+    │   │           ├── Main.java # 接下来要开始编写的文件
+    │   │           ├── mapper/
+    │   │           │   └── StudentsMapper.java
+    │   │           └── model/
+    │   │               └── Student.java
+    │   └── resources/
+    │       ├── db.properties
+    │       ├── mapper/
+    │       │   └── students_mapper.xml
+    │       └── mybatis_config.xml
+    └── test/
+        └── java/
+
+13 directories, 7 files
+
+```
+
+上面的 `mybatis_config.xml` 仅仅只是配置，我们需要读取到 `Main.java` 中进行使用（读取完毕后再加上我们引入的依赖，将会自动寻找其他文件进行映射），我们需要在 `Main.java` 获得 `SqlSessionFactoryBuilder` 实例，进而获得 `SqlSessionFactory` 实例。
+
+从 `XML` 文件中构建 `SqlSessionFactory` 实例非常简单，建议使用类路径下的资源文件进行配置。但也可以使用任意的输入流 `InputStream` 实例，比如用文件路径字符串或 `file://` 的 `URL` 构造的输入流。`MyBatis` 包含一个名叫 `Resources` 的工具类，它包含一些实用方法，使得从类路径或其它位置加载资源文件更加容易。
+
+获取到 `SqlSessionFactory` 实例后就可以获取到 `SqlSession` 实例，然后就可以开始使用这个实例执行我们已经设置好的数据库操作方法了，这些方法都一一对应 `SQL` 模板。
+
+```java
+// Main.java
+package com.work;
+
+import com.work.mapper.StudentsMapper;
+import com.work.model.Student;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        try {
+            // 1. 加载配置文件
+            String resource = "mybatis_config.xml";  // 确保文件位于 "resources/" 下
+            try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
+
+                // 2. 创建 SqlSessionFactory
+                SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+
+                // 3. 获取 SqlSession
+                try (SqlSession session = sqlSessionFactory.openSession()) {
+
+                    // 4. 配置 mybatis-config.xml、db.properties
+
+                    // 5. 配置 students-mapper.xml、StudentsMapper.java、Student.java
+
+                    // 6. 操作数据
+                    // 获取 StudentsMapper
+                    StudentsMapper studentsMapper = session.getMapper(StudentsMapper.class);
+
+                    // 查询所有学生
+                    List<Student> students = studentsMapper.selectAllStudents();
+                    for (Student student : students) {
+                        System.out.println(student.getName() + " - " + student.getScore());
+                    }
+
+                    // 根据学生 ID 查询
+                    Student studentOfId = studentsMapper.selectStudentById(1);
+                    System.out.println(studentOfId.getName());
+
+                    // 根据年级查询学生
+                    List<Student> StudentsOfTheSameGrade = studentsMapper.selectStudentsByGrade("2");
+                    for (Student student : StudentsOfTheSameGrade) {
+                        System.out.println(student.getName() + " - " + student.getScore());
+                    }
+
+                    // 插入新学生
+                    Student newStudent = new Student();
+                    newStudent.setName("小何");
+                    newStudent.setGender("0");
+                    newStudent.setGrade("2");
+                    newStudent.setScore(60.0);
+                    int n = studentsMapper.insertStudent(newStudent); // 执行插入
+                    if (n > 0) {
+                        System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                    }
+                    else if (n == 0) {
+                        System.out.println("执行成功，但是没有影响到任何数据");
+                    }
+                    else /* n < 0 */ {
+                        System.out.println("执行成功，但是执行和行无关的操作");
+                    }
+                    int idOfNewStudent = newStudent.getId(); // 获取生成的 ID
+                    System.out.println(idOfNewStudent);
+                    session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+
+                    // 更新学生信息
+                    Student copyIdOfNewStudent = studentsMapper.selectStudentById(idOfNewStudent);
+                    System.out.println(copyIdOfNewStudent.getName());
+                    System.out.println(copyIdOfNewStudent.getScore());
+                    copyIdOfNewStudent.setScore(40.0);
+                    n = studentsMapper.updateStudent(copyIdOfNewStudent);
+                    if (n > 0) {
+                        System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                    }
+                    else if (n == 0) {
+                        System.out.println("执行成功，但是没有影响到任何数据");
+                    }
+                    else /* n < 0 */ {
+                        System.out.println("执行成功，但是执行和行无关的操作");
+                    }
+                    copyIdOfNewStudent = studentsMapper.selectStudentById(idOfNewStudent);
+                    System.out.println(copyIdOfNewStudent.getName());
+                    System.out.println(copyIdOfNewStudent.getScore());
+                    session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+
+                    // 删除学生
+                    n = studentsMapper.deleteStudent(idOfNewStudent);
+                    if (n > 0) {
+                        System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                    }
+                    else if (n == 0) {
+                        System.out.println("执行成功，但是没有影响到任何数据");
+                    }
+                    else /* n < 0 */ {
+                        System.out.println("执行成功，但是执行和行无关的操作");
+                    }
+                    // System.out.println(studentsMapper.selectStudentById(idOfNewStudent).getName()); // 这里一定会抛出异常
+                    session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+                }
+            }
+        }
+        catch (IOException e) {
+            System.out.println("没有找到 mybatis-config.xml 文件");
+        }
+    }
+}
+
+```
+
+###### 3.1.2.2.6.简化配置
+
+接下来将部分的 `.xml` 转化为 `.java`，并且开始用上注解，这会让我们的代码更加简洁，开发者无需频繁跳转文件进行查看，这次转化的目录结构如下。
+
+```shell
+# 确认文件位置
+$ tree work-mybatis-test
+work-mybatis-test
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java/
+    │   │   └── com/
+    │   │       └── work/
+    │   │           ├── Main.java
+    │   │           ├── config/
+    │   │           │   └── MyBatisConfig.java # 在这里配置关于 MyBatis 的配置
+    │   │           ├── mapper/
+    │   │           │   └── StudentsMapper.java # 在这里配置 SQL 模板和对应的映射文件, 相当于之前的 StudentsMapper.java + students_mapper.xml, 这是因为这个文件使用注解来简化了映射的过程
+    │   │           └── model/
+    │   │               └── Student.java
+    │   └── resources/
+    │       ├── db_development.properties
+    │       └── db_production.properties # 内容可以修改为和 db_development.properties 不一样
+    │        
+    └── test/
+        └── java/
+
+13 directories, 7 files
+
+```
+
+`pom.xml` 文件没啥改动，照旧即可。
+
+```xml
+<!-- pom.xml -->
+<!--
+ 'xmlns=' XML 命名空间
+ 'xmlns:xsi' XML Schema 实例命名空间
+ 'xsi:schemaLocation=' 指定 XML Schema 位置
+ 这些声明的主要作用是帮助 XML 解析器正确地验证和处理 Maven POM 文件，确保它符合 Maven 规范。
+ -->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+    <!-- 指定 Maven 项目对象模型 POM 的版本 -->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 定义项目的所属组织 -->
+    <groupId>com.work</groupId>
+    <!-- 定义项目的具体名称 -->
+    <artifactId>work-mybatis-test</artifactId>
+    <!-- 填写依赖的 Java 版本和使用的字符集 -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
+    <!-- 指定项目构建的打包类型为 .jar -->
+    <packaging>jar</packaging>
+    <!-- 定义项目的版本号 -->
+    <version>0.1.0</version>
+    <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
+    <name>work-mybatis-test</name>
+    <!-- 填写为本项目制定的官方网址 -->
+    <url>https://work.com</url>
+    <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
+    <dependencies>
+        <!-- 依赖名称: 依赖官网/依赖源码 -->
+
+        <!-- Junit: https://junit.org/junit5/ -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope> <!-- 如果不指定 scope 会默认将依赖设置为 compile 生命阶段, 因此设置 scope 本质是确保某些依赖只在某个阶段被使用 -->
+        </dependency>
+
+        <!-- MyBatis: https://github.com/mybatis/mybatis-3/releases -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.19</version>
+        </dependency>
+
+        <!-- JDBC: https://central.sonatype.com/artifact/com.mysql/mysql-connector-j -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+    </dependencies>
+    <!-- 构建插件 -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <!-- 填写启动类 -->
+                            <Main-Class>com.work.App</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                    <descriptorRefs>
+                        <!-- 集成的最终 .jar 包名称 -->
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+```
+
+然后配置两个配置文件，以支持两种运行环境，虽然我们的项目不需要部署，但是我希望整个开发过程完整一些。
+
+```properties
+# db_development.properties
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/work_jdbc_test
+username=limou
+password=123456
+
+```
+
+```properties
+# db_production.properties
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/work_jdbc_test
+username=limou
+password=123456
+
+```
+
+然后依旧是使用之前 `jdbc` 中测试的数据库 `work-jdbc-test` 中的数据表 `students`。
+
+```java
+// MyBatisConfig.java
+package com.work.config;
+
+import org.apache.ibatis.datasource.pooled.PooledDataSource;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+public class MyBatisConfig {
+
+    /**
+     * 获取 SqlSessionFactory，根据传入的环境选择对应的数据库配置
+     *
+     * @param environment 运行环境，可选 "development" 或 "production"
+     * @return SqlSessionFactory 用来创建数据库会话的工厂类
+     * @throws IOException 读取配置文件异常
+     */
+    public SqlSessionFactory getSqlSessionFactory(String environment) throws IOException {
+        // 1. 读取配置文件
+        Properties dbProperties = new Properties(); // 创建键值对象以待后续存储配置(字符:字符)
+        try (InputStream dbPropertiesStream = Resources.getResourceAsStream(
+                "db_" + environment + ".properties"
+        )) {
+            dbProperties.load(dbPropertiesStream); // 加载读取到的文件配置到键值对象中
+        }
+        catch (IOException e) {
+            System.out.println("加载 MyBatis 配置文件出现问题");
+            throw e;
+        }
+
+        // 2. 设置数据源头
+        PooledDataSource dataSource = new PooledDataSource();
+        dataSource.setDriver(dbProperties.getProperty("driver"));
+        dataSource.setUrl(dbProperties.getProperty("url"));
+        dataSource.setUsername(dbProperties.getProperty("username"));
+        dataSource.setPassword(dbProperties.getProperty("password"));
+
+        // 3. 创建配置对象
+        Configuration configuration = new Configuration();
+
+        // 4. 配置运行环境
+        Environment mybatisEnvironment = new Environment(
+                environment, // 设置环境中的环境名称
+                new JdbcTransactionFactory(), // 设置环境中的事务管理(表示使用 JDBC 来管理数据库事务)
+                dataSource // 设置环境中的数据源头
+        );
+        configuration.setEnvironment(mybatisEnvironment);
+
+        // 4. 配置映射注册
+        String mapperDir = "com.work.mapper"; /* 注意不用再编写关于 mapper 的 .xml 文件了, 只需要使用注解就可以自动处理 SQL 模板和方法直接的映射关系, 再补充 Java Bean 的实体类即可 */
+        configuration.addMappers(mapperDir);
+
+        // 5. 返回工厂对象
+        return new SqlSessionFactoryBuilder().build(configuration);
+    }
+}
+
+```
+
+下面使用注解把之前的 `StudentsMapper.java + students_mapper.xml` 合并为一个文件，这样开发人员就无需进行频繁的跳转也能实现之前的功能了。
+
+>   [!NOTE]
+>
+>   吐槽：开发人员狂喜 😏。
+
+```java
+// StudentsMapper.java
+package com.work.mapper;
+
+import com.work.model.Student;
+import org.apache.ibatis.annotations.*;
+
+import java.util.List;
+
+public interface StudentsMapper {
+
+    // 查询所有学生
+    @Select("SELECT id, name, gender, grade, score FROM students")
+    List<Student> selectAllStudents();
+
+    // 根据学生 ID 查询
+    @Select("SELECT id, name, gender, grade, score FROM students WHERE id = #{id}")
+    Student selectStudentById(int id);
+
+    // 根据年级查询学生
+    @Select("SELECT id, name, gender, grade, score FROM students WHERE grade = #{grade}")
+    List<Student> selectStudentsByGrade(String grade);
+
+    // 插入新学生
+    @Insert("INSERT INTO students (name, gender, grade, score) VALUES (#{name}, #{gender}, #{grade}, #{score})")
+    @Options(useGeneratedKeys = true, keyProperty = "id") // 允许获取自动生成的主键
+    int insertStudent(Student student);
+
+    // 更新学生信息
+    @Update("UPDATE students SET name = #{name}, gender = #{gender}, grade = #{grade}, score = #{score} WHERE id = #{id}")
+    int updateStudent(Student student);
+
+    // 删除学生
+    @Delete("DELETE FROM students WHERE id = #{id}")
+    int deleteStudent(int id);
+}
+
+```
+
+然后依旧是我们之前编写的 `Java Bean`，其实也叫实体类，内容没变过。
+
+```java
+// Student.java
+package com.work.model;
+
+public class Student {
+    private Integer id;       // 学生ID
+    private String name;      // 学生姓名
+    private String gender;    // 学生性别
+    private String grade;     // 学生年级
+    private Double score;     // 学生成绩
+
+    // 无参构造方法
+    public Student() {}
+
+    // 带参数的构造方法
+    public Student(Integer id, String name, String gender, String grade, Double score) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.grade = grade;
+        this.score = score;
+    }
+
+    // Getter 和 Setter 方法
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public Double getScore() {
+        return score;
+    }
+
+    public void setScore(Double score) {
+        this.score = score;
+    }
+
+    // toString 方法，方便调试
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
+                ", grade='" + grade + '\'' +
+                ", score=" + score +
+                '}';
+    }
+}
+
+```
+
+然后稍微修改一下 `Main.java` 文件的一些内容即可，后续的数据库操作调用时完全一样的。
+
+```java
+// Main.java
+package com.work;
+
+import com.work.config.MyBatisConfig;
+import com.work.mapper.StudentsMapper;
+import com.work.model.Student;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+
+import java.io.IOException;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        // 1. 编写 .properties 配置文件
+
+        // 2. 获得 SqlSessionFactory
+        MyBatisConfig myBatisConfig = new MyBatisConfig();
+        SqlSessionFactory sqlSessionFactory;
+        try {
+            sqlSessionFactory = myBatisConfig.getSqlSessionFactory("development");
+        } catch (IOException e) {
+            System.out.println("获取工厂对象失败");
+            return;
+        }
+
+        // 3. 获取 SqlSession
+        if (sqlSessionFactory != null) {
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+
+                // 4. 配置 StudentsMapper.java、Student.java
+
+                // 5. 操作数据
+                // (1) 获取 StudentsMapper
+                StudentsMapper studentsMapper = session.getMapper(StudentsMapper.class);
+
+                // (2) 查询所有学生
+                List<Student> students = studentsMapper.selectAllStudents();
+                for (Student student : students) {
+                    System.out.println(student.getName() + " - " + student.getScore());
+                }
+
+                // (3) 根据学生 ID 查询
+                Student studentOfId = studentsMapper.selectStudentById(1);
+                System.out.println(studentOfId.getName());
+
+                // (4) 根据年级查询学生
+                List<Student> StudentsOfTheSameGrade = studentsMapper.selectStudentsByGrade("2");
+                for (Student student : StudentsOfTheSameGrade) {
+                    System.out.println(student.getName() + " - " + student.getScore());
+                }
+
+                // (5) 插入新学生
+                Student newStudent = new Student();
+                newStudent.setName("小何");
+                newStudent.setGender("0");
+                newStudent.setGrade("2");
+                newStudent.setScore(60.0);
+                int n = studentsMapper.insertStudent(newStudent); // 执行插入
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+                int idOfNewStudent = newStudent.getId(); // 获取生成的 ID
+                System.out.println(idOfNewStudent);
+                session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+
+                // (6)更新学生信息
+                Student copyIdOfNewStudent = studentsMapper.selectStudentById(idOfNewStudent);
+                System.out.println(copyIdOfNewStudent.getName());
+                System.out.println(copyIdOfNewStudent.getScore());
+                copyIdOfNewStudent.setScore(40.0);
+                n = studentsMapper.updateStudent(copyIdOfNewStudent);
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+                copyIdOfNewStudent = studentsMapper.selectStudentById(idOfNewStudent);
+                System.out.println(copyIdOfNewStudent.getName());
+                System.out.println(copyIdOfNewStudent.getScore());
+                session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+
+                // (7)删除学生
+                n = studentsMapper.deleteStudent(idOfNewStudent);
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+                // System.out.println(studentsMapper.selectStudentById(idOfNewStudent).getName()); // 这里一定会抛出异常
+                session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+            }
+        }
+    }
+}
+
+```
+
+###### 3.1.2.2.7.链接池化
+
+如何，简洁了不少对吧，那么接下来我们来讨论下关于链接池的问题。默认的链接池采用 `PooledDataSource`，这是 `Mybatis` 内置的链接池，因为我们没有使用任何的依赖，只是引入了 `MyBatis` 而已就可以使用。我们可以再配置文件中配置关于链接池的配置，然后让 `MyBatisConfig.java` 在配置数据源头中设置即可。
+
+如果我希望更换为更加优秀的链接池怎么办呢？`MyBatis` 支持您这么做，下面我将把默认的链接池 `PooledDataSource` 替换为 `HikariCP`，不过这个时候我们就需要引入关于 `HikariCP` 的相关依赖了。
+
+但qi是修改代码挺简单的，我们只需要修改一下关于数据源头的设置即可。
+
+```xml
+<!-- pom.xml -->
+<!--
+ 'xmlns=' XML 命名空间
+ 'xmlns:xsi' XML Schema 实例命名空间
+ 'xsi:schemaLocation=' 指定 XML Schema 位置
+ 这些声明的主要作用是帮助 XML 解析器正确地验证和处理 Maven POM 文件，确保它符合 Maven 规范。
+ -->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+    <!-- 指定 Maven 项目对象模型 POM 的版本 -->
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 定义项目的所属组织 -->
+    <groupId>com.work</groupId>
+    <!-- 定义项目的具体名称 -->
+    <artifactId>work-mybatis-test</artifactId>
+    <!-- 填写依赖的 Java 版本和使用的字符集 -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+    </properties>
+    <!-- 指定项目构建的打包类型为 .jar -->
+    <packaging>jar</packaging>
+    <!-- 定义项目的版本号 -->
+    <version>0.1.0</version>
+    <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
+    <name>work-mybatis-test</name>
+    <!-- 填写为本项目制定的官方网址 -->
+    <url>https://work.com</url>
+    <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
+    <dependencies>
+        <!-- 依赖名称: 依赖官网/依赖源码 -->
+
+        <!-- Junit: https://junit.org/junit5/ -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.9.3</version>
+            <scope>test</scope> <!-- 如果不指定 scope 会默认将依赖设置为 compile 生命阶段, 因此设置 scope 本质是确保某些依赖只在某个阶段被使用 -->
+        </dependency>
+
+        <!-- MyBatis: https://github.com/mybatis/mybatis-3/releases -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.5.19</version>
+        </dependency>
+
+        <!-- JDBC: https://central.sonatype.com/artifact/com.mysql/mysql-connector-j -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>9.2.0</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- HikariCP: https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.2.1</version>
+        </dependency>
+
+        <!-- SLF4J: -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.36</version>
+        </dependency>
+
+        <!-- Logback: -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.10</version>
+        </dependency>
+
+    </dependencies>
+    <!-- 构建插件 -->
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <!-- 填写启动类 -->
+                            <Main-Class>com.work.App</Main-Class>
+                        </manifestEntries>
+                    </archive>
+                    <descriptorRefs>
+                        <!-- 集成的最终 .jar 包名称 -->
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
+
+```
+
+```properties
+# db_development.properties
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/work_jdbc_test
+username=limou
+password=123456
+maximumPoolSize=10
+minimumIdle=2
+idleTimeout=60000
+connectionTimeout=1000
+
+```
+
+```properties
+# db_production.properties
+driver=com.mysql.cj.jdbc.Driver
+url=jdbc:mysql://localhost:3306/work_jdbc_test
+username=limou
+password=123456
+
+```
+
+```java
+// MyBatisConfig.java
+package com.work.config;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.mapping.Environment;
+import org.apache.ibatis.session.Configuration;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.apache.ibatis.transaction.jdbc.JdbcTransactionFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+public class MyBatisConfig {
+
+    /**
+     * 获取 SqlSessionFactory，根据传入的环境选择对应的数据库配置
+     *
+     * @param environment 运行环境，可选 "development" 或 "production"
+     * @return SqlSessionFactory 用来创建数据库会话的工厂类
+     * @throws IOException 读取配置文件异常
+     */
+    public SqlSessionFactory getSqlSessionFactory(String environment) throws IOException {
+        // 1. 读取配置文件
+        Properties dbProperties = new Properties(); // 创建键值对象以待后续存储配置(字符:字符)
+        try (InputStream dbPropertiesStream = Resources.getResourceAsStream(
+                "db_" + environment + ".properties"
+        )) {
+            dbProperties.load(dbPropertiesStream); // 加载读取到的文件配置到键值对象中
+        }
+        catch (IOException e) {
+            System.out.println("加载 MyBatis 配置文件出现问题");
+            throw e;
+        }
+
+
+        // 2. 设置数据源头
+        /*
+        PooledDataSource dataSource = new PooledDataSource();
+        dataSource.setDriver(dbProperties.getProperty("driver"));
+        dataSource.setUrl(dbProperties.getProperty("url"));
+        dataSource.setUsername(dbProperties.getProperty("username"));
+        dataSource.setPassword(dbProperties.getProperty("password"));
+        */
+        // 2. 直接在这里创建 HikariCP 数据源
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(dbProperties.getProperty("url"));
+        hikariConfig.setUsername(dbProperties.getProperty("username"));
+        hikariConfig.setPassword(dbProperties.getProperty("password"));
+        hikariConfig.setDriverClassName(dbProperties.getProperty("driver"));
+        hikariConfig.setMaximumPoolSize(Integer.parseInt(dbProperties.getProperty("maximumPoolSize", "10")));
+        hikariConfig.setMinimumIdle(Integer.parseInt(dbProperties.getProperty("minimumIdle", "2")));
+        hikariConfig.setIdleTimeout(Long.parseLong(dbProperties.getProperty("idleTimeout", "60000")));
+        hikariConfig.setConnectionTimeout(Long.parseLong(dbProperties.getProperty("connectionTimeout", "1000")));
+        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+
+        /* 可以稍微打印一下关于链接池的状态
+        HikariPoolMXBean poolMXBean = dataSource.getHikariPoolMXBean();
+        int activeConnections = poolMXBean.getActiveConnections(); // 获取当前池中活动连接的数量, 预计为 1
+        int idleConnections = poolMXBean.getIdleConnections(); // 获取当前池中空闲连接的数量, 预计为 1
+        int totalConnections = poolMXBean.getTotalConnections(); // 获取连接池中的总连接数(包括活动连接和空闲连接), 预计为 2
+        int threadsAwaitingConnection = poolMXBean.getThreadsAwaitingConnection(); // 获取等待连接的线程数量(如果连接池中的连接已经被用尽, 这些线程会被阻塞直到有空闲连接可用), 预计为 0
+        System.out.println("Active connections: " + activeConnections);
+        System.out.println("Idle connections: " + idleConnections);
+        System.out.println("Total connections: " + totalConnections);
+        System.out.println("Threads awaiting connections: " + threadsAwaitingConnection);
+        */
+        
+        // 3. 创建配置对象
+        Configuration configuration = new Configuration();
+
+        // 4. 配置运行环境
+        Environment mybatisEnvironment = new Environment(
+                environment, // 设置环境中的环境名称
+                new JdbcTransactionFactory(), // 设置环境中的事务管理(表示使用 JDBC 来管理数据库事务)
+                dataSource // 设置环境中的数据源头
+        );
+        configuration.setEnvironment(mybatisEnvironment);
+
+        // 4. 配置映射注册
+        String mapperDir = "com.work.mapper"; /* 注意不用再编写关于 mapper 的 .xml 文件了, 只需要使用注解就可以自动处理 SQL 模板和方法直接的映射关系, 再补充 Java Bean 的实体类即可 */
+        configuration.addMappers(mapperDir);
+
+        // 5. 返回工厂对象
+        return new SqlSessionFactoryBuilder().build(configuration);
+    }
+}
+
+```
+
+```java
+// StudentsMapper.java
+package com.work.mapper;
+
+import com.work.model.Student;
+import org.apache.ibatis.annotations.*;
+
+import java.util.List;
+
+public interface StudentsMapper {
+
+    // 查询所有学生
+    @Select("SELECT id, name, gender, grade, score FROM students")
+    List<Student> selectAllStudents();
+
+    // 根据学生 ID 查询
+    @Select("SELECT id, name, gender, grade, score FROM students WHERE id = #{id}")
+    Student selectStudentById(int id);
+
+    // 根据年级查询学生
+    @Select("SELECT id, name, gender, grade, score FROM students WHERE grade = #{grade}")
+    List<Student> selectStudentsByGrade(String grade);
+
+    // 插入新学生
+    @Insert("INSERT INTO students (name, gender, grade, score) VALUES (#{name}, #{gender}, #{grade}, #{score})")
+    @Options(useGeneratedKeys = true, keyProperty = "id") // 允许获取自动生成的主键
+    int insertStudent(Student student);
+
+    // 更新学生信息
+    @Update("UPDATE students SET name = #{name}, gender = #{gender}, grade = #{grade}, score = #{score} WHERE id = #{id}")
+    int updateStudent(Student student);
+
+    // 删除学生
+    @Delete("DELETE FROM students WHERE id = #{id}")
+    int deleteStudent(int id);
+}
+
+```
+
+```java
+// Student.java
+package com.work.model;
+
+public class Student {
+    private Integer id;       // 学生ID
+    private String name;      // 学生姓名
+    private String gender;    // 学生性别
+    private String grade;     // 学生年级
+    private Double score;     // 学生成绩
+
+    // 无参构造方法
+    public Student() {}
+
+    // 带参数的构造方法
+    public Student(Integer id, String name, String gender, String grade, Double score) {
+        this.id = id;
+        this.name = name;
+        this.gender = gender;
+        this.grade = grade;
+        this.score = score;
+    }
+
+    // Getter 和 Setter 方法
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getGender() {
+        return gender;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public String getGrade() {
+        return grade;
+    }
+
+    public void setGrade(String grade) {
+        this.grade = grade;
+    }
+
+    public Double getScore() {
+        return score;
+    }
+
+    public void setScore(Double score) {
+        this.score = score;
+    }
+
+    // toString 方法，方便调试
+    @Override
+    public String toString() {
+        return "Student{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", gender='" + gender + '\'' +
+                ", grade='" + grade + '\'' +
+                ", score=" + score +
+                '}';
+    }
+}
+
+```
+
+```java
+// Main.java
+package com.work;
+
+import com.work.config.MyBatisConfig;
+import com.work.mapper.StudentsMapper;
+import com.work.model.Student;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+
+import java.io.IOException;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        // 1. 编写 .properties 配置文件
+
+        // 2. 获得 SqlSessionFactory
+        MyBatisConfig myBatisConfig = new MyBatisConfig();
+        SqlSessionFactory sqlSessionFactory;
+        try {
+            sqlSessionFactory = myBatisConfig.getSqlSessionFactory("development");
+        } catch (IOException e) {
+            System.out.println("获取工厂对象失败");
+            return;
+        }
+
+        // 3. 获取 SqlSession
+        if (sqlSessionFactory != null) {
+            try (SqlSession session = sqlSessionFactory.openSession()) {
+
+                // 4. 配置 StudentsMapper.java、Student.java
+
+                // 5. 操作数据
+                // (1) 获取 StudentsMapper
+                StudentsMapper studentsMapper = session.getMapper(StudentsMapper.class);
+
+                // (2) 查询所有学生
+                List<Student> students = studentsMapper.selectAllStudents();
+                for (Student student : students) {
+                    System.out.println(student.getName() + " - " + student.getScore());
+                }
+
+                // (3) 根据学生 ID 查询
+                Student studentOfId = studentsMapper.selectStudentById(1);
+                System.out.println(studentOfId.getName());
+
+                // (4) 根据年级查询学生
+                List<Student> StudentsOfTheSameGrade = studentsMapper.selectStudentsByGrade("2");
+                for (Student student : StudentsOfTheSameGrade) {
+                    System.out.println(student.getName() + " - " + student.getScore());
+                }
+
+                // (5) 插入新学生
+                Student newStudent = new Student();
+                newStudent.setName("小何");
+                newStudent.setGender("0");
+                newStudent.setGrade("2");
+                newStudent.setScore(60.0);
+                int n = studentsMapper.insertStudent(newStudent); // 执行插入
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+                int idOfNewStudent = newStudent.getId(); // 获取生成的 ID
+                System.out.println(idOfNewStudent);
+                session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+
+                // (6)更新学生信息
+                Student copyIdOfNewStudent = studentsMapper.selectStudentById(idOfNewStudent);
+                System.out.println(copyIdOfNewStudent.getName());
+                System.out.println(copyIdOfNewStudent.getScore());
+                copyIdOfNewStudent.setScore(40.0);
+                n = studentsMapper.updateStudent(copyIdOfNewStudent);
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+                copyIdOfNewStudent = studentsMapper.selectStudentById(idOfNewStudent);
+                System.out.println(copyIdOfNewStudent.getName());
+                System.out.println(copyIdOfNewStudent.getScore());
+                session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+
+                // (7)删除学生
+                n = studentsMapper.deleteStudent(idOfNewStudent);
+                if (n > 0) {
+                    System.out.println("执行成功，并且影响到了 " + n + " 行数据");
+                }
+                else if (n == 0) {
+                    System.out.println("执行成功，但是没有影响到任何数据");
+                }
+                else /* n < 0 */ {
+                    System.out.println("执行成功，但是执行和行无关的操作");
+                }
+                // System.out.println(studentsMapper.selectStudentById(idOfNewStudent).getName()); // 这里一定会抛出异常
+                session.commit(); // 添加这行代码提交事务, 因为需要修改表记录, 默认 MyBatis 启动事务后不提交
+            }
+        }
+    }
+}
+
+```
+
+###### 3.1.2.2.8.集成插件
+
+使用 [MyBatisCodeHelper-Pro](https://brucege.com/doc/#/) 插件或 [MyBatisX](https://baomidou.com/guides/mybatis-x/) 插件，加快编写 `Mapper` 文件提高效率，这里优先推荐 `MyBatisX` 插件，因为比较成熟并且是几乎免费的（是的，前者需要收费，对于初学者没必要）。
+
+查阅 `MyBatis` 插件的官方文档可知，该插件主要有以下四个核心功能：
+
+-   **代码生成**：可以轻松地根据数据库表结构生成对应的
+    -   `./main/java/model/entity/XxxEntity.java` 实体类
+    -   `./main/java/mapper/XxxMapper.java` 接口类
+    -   `./main/resource/mapper/xxx_mpper.xml` 映射文件
+-   **映射跳转**：如果您使用 `xxx_mapper.xml` 和 `XxxMapper.java` 而不是使用注解的映射方式，则可以使用该插件快速在两个文件中跳转
+-   **重置模板**：`MybatisX` 允许您重置代码生成模板，以恢复到默认设置或自定义模板内容
+-   **代码提示**：`MybatisX` 支持 `JPA` 风格的代码提示，包括新增操作、查询操作、修改操作、删除操作的自动代码生成。
+
+玩得转 `MyBatisX` 插件几乎就玩得转其他的类似插件，并且加快了我们的开发过程，接下来我们来尝试实践一下。
+
+![image-20250215004740517](./assets/image-20250215004740517.png)
+
+![image-20250215004807644](./assets/image-20250215004807644.png)
+
+上面这个弹窗的配置我已经一一进行了解释，您看需要进行配置即可，下面是我填写的配置以及生成结果。
 
 
 
 #### 3.1.3.MyBatisPlus
 
-
+到 `MyBatisPlus` 这里，我们就需要对我们编写数据库操作做一个规范了，这个规范就是工作室数据操作的规范，也是我一直采用的规范，这个规范将会带您再下面的代码实践环节中进行实践，开发一个用户表的增删查改。
 
 ### 3.2.代码实践
 
 使用 `MyBatisPlus` 来快速实现对一个用户表的增删查改。
+
+
+
+
+

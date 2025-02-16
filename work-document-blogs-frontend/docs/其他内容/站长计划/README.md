@@ -521,10 +521,21 @@
 
 ## 2025-02-12
 
-- [x] 陪检
-- [x] 出勤
-- [ ] JDBC 的系统学习
-- [ ] MyBatis 的系统学习
+- [x] ~~陪检~~
+- [x] ~~出勤~~
+- [x] ~~JDBC 的系统学习~~
+
+## 2025-02-13
+
+- [x] ~~MyBatis 的系统学习~~
+
+## 2025-02-14
+
+- [x] ~~MyBatis 的插件 MyBatisX 的学习~~
+
+## 2025-02-15
+
+- [ ] MyBatisPlus 的学习
 - [ ] 阅读《创建 Go 模块》文档
 - [ ] 整理关于 Linux 指令文章
 - [ ] 整理关于 Linux 容器技术软件文章，发布博文
@@ -587,6 +598,18 @@
 -   [ ] https://codingsans.com/blog/microservice-architecture-best-practices
 -   [ ] https://www.vinaysahni.com/best-practices-for-building-a-microservice-architecture
 -   [ ] https://jobs.zalando.com/en/tech/blog/simplicity-by-distributing-complexity
+
+- [ ] 驾车千里
+- [ ] 益人浓茶
+- [ ] 神人咖啡
+- [ ] 愁人酒精
+- [ ] 害人烟草
+- [ ] 黄金钻石
+- [ ] 阴阳之道
+- [ ] 美食菜谱
+- [ ] 架构内核
+- [ ] 礼仪谈吐
+- [ ] 天文地理
 
 :::
 

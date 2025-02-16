@@ -1132,7 +1132,7 @@ Get value of id: 1018
 
 ##### 3.1.2.2.使用
 
-###### 3.1.2.2.1.基本配置
+###### 3.1.2.2.1.配置文件
 
 我们重新创建一个项目用来演示 `MyBatis` 的使用，和 `JDBC` 的使用一样，先把 `MyBatis` 一整套流程过一遍，再来进行加强。
 
@@ -1238,6 +1238,10 @@ Get value of id: 1018
 
 然后配置 `MyBatis` 的相关配置，配置 `MyBatis` 的方式有两种，一种是在 `XML` 文件中配置，一种是在 `Java` 程序中配置。
 
+>   [!IMPORTANT]
+>
+>   补充：更加详细的内容可以查阅 [配置文件文档](https://mybatis.net.cn/configuration.html)。
+
 ###### 3.1.2.2.2.会话操作
 
 每个基于 `MyBatis` 的应用都是以一个 `SqlSessionFactory` 的实例为核心的。`SqlSessionFactory` 的实例可以通过 `SqlSessionFactoryBuilder` 获得。而 `SqlSessionFactoryBuilder` 则可以从 `XML` 配置文件或一个预先配置的 `Configuration` 实例来构建出 `SqlSessionFactory` 实例。
@@ -1250,6 +1254,12 @@ Configuration -->|"进而获得"| SqlSessionFactoryBuilder
 SqlSessionFactoryBuilder -->|"进而构建"| SqlSessionFactory
 
 ```
+
+>   [!IMPORTANT]
+>
+>   补充：关于各个实例的作用域问题，这里需要强调一下。
+>
+>   
 
 >   [!WARNING]
 >
@@ -1296,6 +1306,21 @@ SqlSessionFactoryBuilder -->|"进而构建"| SqlSessionFactory
 
 ```
 
+>   [!IMPORTANT]
+>
+>   补充：如果上述的 `mapper/` 下有多个 `xxx_mapper.xml` 文件（后面会教您写这种映射文件），那么可以使用下面的做法来一次性映射多个映射文件。
+>
+>   ```xml
+>   <!-- 将包内的映射器接口实现全部注册为映射器 -->
+>   <configuration>
+>       <!-- 其他标签... -->   
+>        <mappers>
+>            <package name="org.mybatis.builder"/>
+>        </mappers>
+>   </configuration>
+>   
+>   ```
+
 `db.properties` 文件的内容如下，以填充上述 `mybati_config.xml` 中的。
 
 ```properties
@@ -1310,7 +1335,7 @@ password=123456
 
 ###### 3.1.2.2.3.映射文件
 
-在 `main/resource/mapper/` 目录下，编写文件 `students_mapper.xml`，具体内容如下，其实就是提供了 `SQL` 模板以供后续的映射来使用。
+`MyBatis` 遵循的就是接口式编程，使用者需要在编写映射文件的同时定义接口。因此首先需要在 `main/resource/mapper/` 目录下，编写文件 `students_mapper.xml`，具体内容如下，其实就是提供了 `SQL` 模板以供后续的接口来映射，再交给用户使用。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?> <!-- students_mapper.xml -->
@@ -1377,6 +1402,10 @@ password=123456
 
 ```
 
+>   [!IMPORTANT]
+>
+>   补充：如果觉得频繁使用 `resultType="com.work.model.Student"` 比较麻烦，也可以先使用 `<typeAlias type="com.work.model.Student" alias="Student"/>` 进行重命名（放在最前面和 `<select>` 标签同级即可），然后直接使用 `resultType="Student"` 就可以了。
+
 有了映射配置文件，就需要定义一个关于映射的类文件 `./main/java/mapper/studentsMapper.java`，方便 `Java` 程序使用上述可以经过映射的 `SQL` 模板。注意每个模板标签中的 `id="xxx"` 要和 `studentMapper.java` 类中定义的方法名字完全相同。否则映射无法生效到方法上。
 
 ```java
@@ -1402,6 +1431,10 @@ public interface StudentsMapper {
 }
 
 ```
+
+>   [!IMPORTANT]
+>
+>   补充：补充：更加详细的内容可以查阅 [映射文件文档](https://mybatis.net.cn/sqlmap-xml.html)。
 
 ###### 3.1.2.2.4.数据描述
 
@@ -1901,6 +1934,206 @@ public interface StudentsMapper {
 
 ```
 
+>   [!IMPORTANT]
+>
+>   补充：这里列出一些常用的 `MyBatis` 提供的注解。
+>
+>   -   **@Select, 查询数据**：用于执行 `SELECT` 模板语句，从数据库查询数据。
+>   -   **@Insert, 插入数据**：用于执行 `INSERT` 模板语句，向数据库插入数据。
+>   -   **@Update, 更新数据**：用于执行 `UPDATE` 语句，修改数据库中的数据。
+>   -   **@Delete, 删除数据**：用于执行 `DELETE` 语句，删除数据库中的数据。
+>   -   **@Results & @Result, 字段映射**：解决数据库字段与 `Java` 对象属性不一致的问题，手动指定字段映射。
+>
+>       ```java
+>       // @Results & @Result
+>       import org.apache.ibatis.annotations.*;
+>                       
+>       public interface UserMapper {
+>           @Select("SELECT user_id, user_name FROM users WHERE id = #{id}")
+>           @Results({
+>               @Result(column = "user_id", property = "id"), // 数据库中的是 user_id
+>               @Result(column = "user_name", property = "name") // 数据库中的是 user_name
+>           })
+>           User getUser(int id);
+>       }
+>                       
+>       ```
+>
+>   *   **@One & @Many, 一对一/一对多关联查询**：解决一对一和一对多关系的数据查询。
+>
+>       ```java
+>       // @One 一对一(查询得到一个用户一个部门)
+>       /*
+>       users 表包含以下字段:
+>       字段名	  类型	说明
+>       user_table_id             INT       用户的唯一 ID
+>       user_table_name	          VARCHAR	用户的姓名
+>       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
+>                       
+>       departments 表包含以下字段:
+>       字段名	  类型	说明
+>       departments_table_id	  INT	    部门的唯一 ID
+>       departments_table_name    VARCHAR   部门的名称
+>                       
+>       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
+>       想要获取完整的 Department 对象, 需要查 departments 表,
+>       并且假设 User Bean 实体和 Department Bean 实体长下面这样
+>       public class User {
+>           private int user_entity_id; // 用户 ID
+>           private String usre_entity_name; // 用户姓名
+>           private Department user_entity_department; // 所属部门对象, 后续通过子查询来填充
+>           // ...
+>       }
+>       public class Department {
+>           private int department_entity_id; // 部门 ID
+>           private String department_entity_name; // 部门名称
+>           private List<User> users; // 该部门的用户列表
+>           // ...
+>       }
+>                       
+>       并且已经编写好
+>       public interface DepartmentMapper {
+>           @Select("SELECT department_entity_id, department_entity_name FROM departments WHERE id = #{deptId}")
+>           Department getDepartment(int deptId);  // 根据 deptId 查询部门信息
+>       }
+>       */
+>                       
+>       import org.apache.ibatis.annotations.*;
+>                       
+>       public interface UserMapper {
+>           @Select("SELECT * FROM users WHERE user_table_id = #{id}") // 根据用户传递的参数填充 SQL 模板后查询得到所有符合 id 值的用户
+>           @Results({ // 但是执行结果中由于数据表字段和实体类字段不统一, 需要进行映射
+>               @Result(column = "user_table_id", property = "user_entity_id"), // 映射 user_table_id 为 user_entity_id
+>               @Result(column = "user_table_name", property = "user_entity_name"), // 映射 user_table_name 为 user_entity_name
+>               @Result(column = "use_table_dept_id", property = "user_entity_department", // 映射 use_table_dept_id 为 user_entity_department(不过这里仅仅映射字段还不够, 还需要进行一对一转换)
+>                       one = @One(select = "com.example.DepartmentMapper.getDepartment")) // 调用 DepartmentMapper 的 getDepartment 方法获取部门信息(@one 自动将 use_table_dept_id 作为参数传递给 getDepartment() 以放回部门对象进行进一步的绑定)
+>           })
+>           User getUserWithDepartment(int id);
+>       }
+>                       
+>       ```
+>       
+>       ```java
+>       // @Many 一对多(查询得到一个部门多个用户)
+>       /*
+>       users 表包含以下字段:
+>       字段名	  类型	说明
+>       user_table_id             INT       用户的唯一 ID
+>       user_table_name	          VARCHAR	用户的姓名
+>       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
+>                       
+>       departments 表包含以下字段:
+>       字段名	  类型	说明
+>       departments_table_id	  INT	    部门的唯一 ID
+>       departments_table_name    VARCHAR   部门的名称
+>                       
+>       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
+>       想要获取完整的 Department 对象, 需要查 departments 表,
+>       并且假设 User Bean 实体和 Department Bean 实体长下面这样
+>       public class User {
+>           private int user_entity_id; // 用户 ID
+>           private String usre_entity_name; // 用户姓名
+>           private Department user_entity_department; // 所属部门对象, 后续通过子查询来填充
+>           // ...
+>       }
+>       public class Department {
+>           private int dept_entity_id; // 部门 ID
+>           private String dept_entity_name; // 部门名称
+>           private List<User> users; // 该部门的用户列表
+>           // ...
+>       }
+>                       
+>       并且已经编写好
+>       public interface UserMapper {
+>           @Select("SELECT user_table_id, user_table_name, use_table_dept_id FROM users WHERE use_table_dept_id = #{deptId}")
+>           @Results({
+>               @Result(column = "user_table_id", property = "user_entity_id"),
+>               @Result(column = "user_table_name", property = "usre_entity_name")
+>           })
+>           List<User> getUsersByDepartmentId(int deptId);
+>       }
+>                       
+>       */
+>                       
+>       public interface DepartmentMapper {
+>           @Select("SELECT departments_table_id, departments_table_name FROM departments WHERE departments_table_id = #{deptId}")
+>           @Results({
+>               @Result(column = "departments_table_id", property = "dept_entity_id"),
+>               @Result(column = "departments_table_name", property = "dept_entity_name"),
+>               @Result(column = "departments_table_id", property = "users",
+>                       many = @Many(select = "com.example.UserMapper.getUsersByDepartmentId")) // 关联所有用户
+>           })
+>           Department getDepartmentById(int deptId); // Department 中包含用户列表
+>       }
+>                       
+>       ```
+>
+>   -   **@Param, 传递多个参数**：在 `SQL` 语句中传递多个参数时，避免 `#{arg0}`、`#{arg1}` 这种不直观的写法。
+>
+>       ```java
+>       // @Param
+>       import org.apache.ibatis.annotations.Param;
+>       import org.apache.ibatis.annotations.Select;
+>       
+>       public interface UserMapper {
+>           @Select("SELECT * FROM users WHERE name = #{name} AND age = #{age}")
+>           User getUser(@Param("name") String name, @Param("age") int age);
+>       }
+>       
+>       ```
+>
+>   -   **@MapKey, 返回 Map**：查询多个对象，并以指定字段作为 `key` 返回 `Map` 结构数据。
+>
+>       ```java
+>       // @MapKey
+>       import org.apache.ibatis.annotations.MapKey;
+>       import org.apache.ibatis.annotations.Select;
+>       
+>       import java.util.Map;
+>       
+>       public interface UserMapper {
+>           @Select("SELECT * FROM users")
+>           @MapKey("id")  // 指定 id 作为 Map 的 key
+>           Map<Integer, User> getAllUsers();
+>       }
+>       /*
+>       如果不使用 @MapKey, MyBatis 默认不会将查询结果映射为 Map<Integer, User>,
+>       而是返回一个列表 List<User>, 但在某些情况下，我们希望快速通过 ID 获取用户,
+>       而不是遍历列表查找, 这时使用 @MapKey 非常有用
+>       */
+>       
+>       ```
+>
+>   -   **@ResultMap, 复用字段映射**：避免 `@Results` 重复定义字段映射，提取成 `@ResultMap` 进行复用。
+>
+>       ```java
+>       // @ResultMap
+>       import org.apache.ibatis.annotations.*;
+>                       
+>       public interface UserMapper {
+>                       
+>           // 定义查询语句，并引用已有的映射规则
+>           @Select("SELECT * FROM users WHERE id = #{id}")
+>           @ResultMap("userResultMap") // 引用已经定义好的映射规则
+>           User getUser(int id); // 返回一个 User 对象
+>                       
+>           // 定义一个映射规则
+>           @Results(id = "userResultMap", value = {
+>               @Result(column = "id", property = "id"),
+>               @Result(column = "name", property = "name")
+>           })
+>           User getUserById(int id);
+>       }
+>                       
+>       ```
+>
+>
+>   不仅仅是注解，包括 `.xml` 编写的映射文件也有类似的功能。
+
+>   [!NOTE]
+>
+>   吐槽：不过即使注解可以方便开发者避免切换，但是其实有些开发者习惯了 `.xml` 开发，再加上有 `MyBatisX` 这类插件的支持，跳转两份文件其实也不困难。
+
 然后依旧是我们之前编写的 `Java Bean`，其实也叫实体类，内容没变过。
 
 ```java
@@ -2097,13 +2330,17 @@ public class Main {
 
 ```
 
+>   [!CAUTION]
+>
+>   警告：使用注解来映射简单语句会使代码显得更加简洁，但对于稍微复杂一点的语句，`Java` 注解不仅力不从心，还会让您复杂的 `SQL` 语句更加混乱不堪。因此，如果你需要做一些很复杂的操作，最好用 `XML` 来映射语句，我在这个教学系列中使用注解也是第一次，在实际开发中无论 `SQL` 语句是否简单，实际上我都会使用 `XML` 来进行配置，因此本教学系列简单了解一下就可以。
+
 ###### 3.1.2.2.7.链接池化
 
-如何，简洁了不少对吧，那么接下来我们来讨论下关于链接池的问题。默认的链接池采用 `PooledDataSource`，这是 `Mybatis` 内置的链接池，因为我们没有使用任何的依赖，只是引入了 `MyBatis` 而已就可以使用。我们可以再配置文件中配置关于链接池的配置，然后让 `MyBatisConfig.java` 在配置数据源头中设置即可。
+那么接下来我们来讨论下关于链接池的问题。默认的链接池采用 `PooledDataSource`，这是 `Mybatis` 内置的链接池，因为我们没有使用任何的依赖，只是引入了 `MyBatis` 而已就可以使用。我们可以再配置文件中配置关于链接池的配置，然后让 `MyBatisConfig.java` 在配置数据源头中设置即可。
 
 如果我希望更换为更加优秀的链接池怎么办呢？`MyBatis` 支持您这么做，下面我将把默认的链接池 `PooledDataSource` 替换为 `HikariCP`，不过这个时候我们就需要引入关于 `HikariCP` 的相关依赖了。
 
-但qi是修改代码挺简单的，我们只需要修改一下关于数据源头的设置即可。
+但其实修改代码挺简单的，我们只需要修改一下关于数据源头的设置即可。
 
 ```xml
 <!-- pom.xml -->
@@ -2569,7 +2806,7 @@ public class Main {
 
 ###### 3.1.2.2.8.集成插件
 
-使用 [MyBatisCodeHelper-Pro](https://brucege.com/doc/#/) 插件或 [MyBatisX](https://baomidou.com/guides/mybatis-x/) 插件，加快编写 `Mapper` 文件提高效率，这里优先推荐 `MyBatisX` 插件，因为比较成熟并且是几乎免费的（是的，前者需要收费，对于初学者没必要）。
+使用 [MyBatisX](https://baomidou.com/guides/mybatis-x/) 插件或 [MyBatisCodeHelper-Pro](https://brucege.com/doc/#/) 插件，加快编写 `Mapper` 文件提高效率，这里优先推荐 `MyBatisX` 插件，因为比较成熟并且是几乎免费的（是的，前者需要收费，对于初学者没必要）。
 
 查阅 `MyBatis` 插件的官方文档可知，该插件主要有以下四个核心功能：
 
@@ -2581,19 +2818,49 @@ public class Main {
 -   **重置模板**：`MybatisX` 允许您重置代码生成模板，以恢复到默认设置或自定义模板内容
 -   **代码提示**：`MybatisX` 支持 `JPA` 风格的代码提示，包括新增操作、查询操作、修改操作、删除操作的自动代码生成。
 
-玩得转 `MyBatisX` 插件几乎就玩得转其他的类似插件，并且加快了我们的开发过程，接下来我们来尝试实践一下。
+不过这个插件更多和 `MyBatisPlus` 协调操作更佳，我们简单来作为跳转使用即可。因此最后总结来看的话，我还是建议您使用 `XML` 的配置，尽量少用注解来使用 `MyBatis`。
 
-![image-20250215004740517](./assets/image-20250215004740517.png)
+###### 3.1.2.2.9.动态语句
 
-![image-20250215004807644](./assets/image-20250215004807644.png)
 
-上面这个弹窗的配置我已经一一进行了解释，您看需要进行配置即可，下面是我填写的配置以及生成结果。
+
+###### 3.1.2.2.10.语言接口
+
+
+
+###### 3.1.2.2.11.引入日志
 
 
 
 #### 3.1.3.MyBatisPlus
 
+##### 3.1.3.1.理解
+
 到 `MyBatisPlus` 这里，我们就需要对我们编写数据库操作做一个规范了，这个规范就是工作室数据操作的规范，也是我一直采用的规范，这个规范将会带您再下面的代码实践环节中进行实践，开发一个用户表的增删查改。
+
+由于 `MyBatisPlus` 是对 `MyBatis` 的强化，我们需要提前了解前要知识，避免后续的内容一知半解。
+
+##### 3.1.3.2.使用
+
+>   [!CAUTION]
+>
+>   警告：不过由于 `MyBatisPlus` 最好是结合 `Spring` 系列的全家桶来使用，如果您没有使用 `Spring` 的经历，最好先学习完 `Spring` 的相关内容（至少阅读过 `Spring` 和 `SpringBoot` 的文章后再回来阅读这里后面的知识）。
+
+![image-20250215004740517](./assets/image-20250215004740517.png)
+
+![image-20250215123427899](./assets/image-20250215123427899.png)
+
+上面这个弹窗的配置我已经一一进行了解释，您看需要进行配置即可，下面是我填写的配置以及生成结果。
+
+![image-20250215123500305](./assets/image-20250215123500305.png)
+
+然后就会跳出以下配置。
+
+![image-20250215211033549](./assets/image-20250215211033549.png)
+
+这里我也配置一份供您参考。
+
+![image-20250215211209896](./assets/image-20250215211209896.png)
 
 ### 3.2.代码实践
 

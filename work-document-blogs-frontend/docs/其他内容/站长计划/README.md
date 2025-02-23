@@ -1,130 +1,69 @@
 <!-- @include: basic.md#statement -->
 
-# 近期计划
+# 计划
 
-::: details ~~0.预先准备（必做）~~
+## 大纲
 
-## ~~0.预先准备~~
+### 1.技术学习
 
-- [x] ~~课程的所有作业补回~~
-- [x] ~~课程的所有考试复习~~
-- [x] ~~课程的所有课设结项~~
+::: details 1.技术学习
 
-:::
+#### 1.1.基础知识
 
-::: details 1.技术学习（必做）
-
-## 1.技术学习（必做）
-
-### 1.1.编程语言（基础）
-
-- [ ] [阅读文章](https://time.geekbang.org/column/article/8701)
+- [ ] [阅读文章中提到的书籍](https://time.geekbang.org/column/article/8701)
+- [ ] [阅读文章中提到的书籍](https://time.geekbang.org/column/article/8887)
+- [ ] [阅读文章中提到的书籍](https://time.geekbang.org/column/article/9759)
+- [ ] [阅读文章中提到的书籍](https://time.geekbang.org/column/article/9851)
+- [ ] [阅读文章中提到的书籍](https://time.geekbang.org/column/article/10301)
+- [ ] 持续面试鸭刷题目
 - [ ] 编程语言笔记重构
-  - [ ] C/Cpp 技术栈笔记
-  - [ ] Java 技术栈笔记
-- [ ] 面试鸭刷题目
-- [ ] 整理面试题目
-- [ ] 其他任务
-  - [ ] 阅读技术书籍《Java 核心卷 Ⅰ》
-  - [ ] 阅读技术书籍《Java 核心卷 Ⅱ》
-  - [ ] 阅读技术书籍《JVM 虚拟机》
-  - [ ] C++、Java、Python 编码规范的定义（采用 Google 开源风格）
-  - [ ] Cpp 现代化语法
-  - [ ] Java 现代化语法
-  - [ ] Go 基本语法
-  - [ ] 皓叔泛型系列
-
-### 1.2.数构算法（基础）
-
-- [ ] [阅读文章](https://time.geekbang.org/column/article/8887)
 - [ ] 数构算法笔记重构
-  - [ ] 数构笔记
-  - [ ] 排序笔记
-  - [ ] 算法笔记
-- [ ] 面试鸭刷题目
-- [ ] 整理面试题目
-- [ ] 其他任务
-  - [ ] 阅读技术书籍《算法》
-
-### 1.3.数据存储（基础）
-
-- [ ] [阅读文章](https://time.geekbang.org/column/article/8887)
-- [ ] [阅读文章](https://time.geekbang.org/column/article/9759)
-- [ ] [阅读文章](https://time.geekbang.org/column/article/9851)
-- [ ] [阅读文章](https://time.geekbang.org/column/article/10301)
 - [ ] 数据存储笔记重构
-  - [ ] 初级 MySQL 笔记
-  - [ ] 高级 MySQL 笔记
-- [ ] MySQL 免费设计过程
-- [ ] 面试鸭刷题目
-- [ ] 整理面试题目
-- [ ] 其他任务
-  - [ ] 阅读技术书籍《图解 MySQL》
-  - [ ] 阅读技术书籍《MySQL 技术内幕》
-  - [ ] Redis 组件
-  - [ ] Mongodb 组件
-
-### 1.4.系统网络（基础）
-
-- [ ] [阅读文章](https://time.geekbang.org/column/article/8888)
 - [ ] 操统网络笔记重构
-  - [ ] 基本操作笔记
-  - [ ] 深入原理笔记
-  - [ ] 现代软件笔记
-- [ ] 面试鸭刷题目
-- [ ] 整理面试题目
-- [ ] 其他任务
-  - [ ] 阅读技术书籍《网络是怎么工作的》
-  - [ ] 阅读技术书籍《鸟叔的 Linux 私房菜》
 
-### 1.5.前端开发（基础）
-
-- [ ] 客户前端笔记重构
-  - [ ] JS/TS/JSX/TSX 笔记
-  - [ ] Vue/React 笔记
-  - [ ] Antd/Arco 笔记
-- [ ] 面试鸭刷题目
-- [ ] 整理面试题目
-
-### 1.6.业务开发（拓展）
+#### 1.2.业务开发
 
 - [ ] [Java 并发编程](https://www.codefather.cn/course/1845008167655804929)
 - [ ] [阅读 YUPI 的 Java 路线]()
 - [ ] [阅读 ALI 的 Java 路线](https://developer.aliyun.com/graph/java)
-- [ ] 购买 [玩转 Spring 全家桶](https://time.geekbang.org/course/detail/100023501-81418)
-- [ ] 还有皓叔的看法
+- [x] 购买 [玩转 Spring 全家桶](https://time.geekbang.org/course/detail/100023501-81418)
+- [x] Maven
+- [ ] JDBC + MyBatis + MyBatisPlus
 - [ ] Spring
 - [ ] SpringMVC
 - [ ] SpringBoot
-- [ ] MyBatis
-- [ ] MyBatisPlus
 - [ ] SpringCloud
 
-### 1.7.集群开发（拓展）
+#### 1.3.页面开发
 
-- [x] ~~初步部署工作室的第一台测试 ESXI 机器~~
-- [x] ~~联系服务器厂商搭建集群的相关方案~~
-- [ ] 创建学习服务器
-- [ ] 创建工作室测试机器, 绘制工作室架构图并且开始逐步部署（4 核 8 G * 80 台）
-- [ ] [CI/CD 基础学习](https://www.codefather.cn/course/1793910103252721665)
-- [ ] 初始化工程部主机，购买主机柜
-- [ ] K8s 集群的学习
-  - [ ] Minikube 的学习
-  - [ ] kubeadm 的学习
-  - [ ] 原生 k8s 的学习
-- [ ] vSphere 项目
-  - [ ] [vSphere 官方架构文档](https://docs.vmware.com/cn/VMware-vSphere/index.html)
-  - [ ] [vSphere 博客梳理文档](https://blog.csdn.net/weixin_44837286/article/details/106221679?sharetype=blogdetail&shareId=106221679&sharerefer=APP&sharesource=m0_73168361&sharefrom=link)   
-  - [ ] [vSphere 发行版概述](https://docs.vmware.com/cn/VMware-vSphere/8.0/rn/vmware-vsphere-80-release-notes/index.html)
-  - [ ] [vSphere-esxi 安装手册](https://docs.vmware.com/cn/VMware-vSphere/8.0/vsphere-esxi-installation/GUID-B2F01BF5-078A-4C7E-B505-5DFFED0B8C38.html)
-  - [ ] [vSphere-vcenter server 安装手册](https://docs.vmware.com/cn/VMware-vSphere/8.0/vsphere-vcenter-installation/GUID-8DC3866D-5087-40A2-8067-1361A2AF95BD.html)
-  - [ ] 读取 `vSphere` 官方配置文档...
-  - [ ] [部署和理论学习](https://www.bilibili.com/video/BV1J94y1B7sR/?spm_id_from=333.337.search-card.all.click&vd_source=c92c89dbfcf9cc30c48086469621f35b)
-- [ ] [阅读项目流程博文](https://www.codefather.cn/course/1789189862986850306/section/1789190839475347458?contentType=text&tabKey=info&type=#) + 产出工作室设计规格书
-- [ ] [阅读协作开发博文](https://www.codefather.cn/course/1789189862986850306/section/1789190804671012866?contentType=text&tabKey=info&type=#heading-9) + 产出工作室自部署
-- [ ] 设计工作室集群架构并且开始进行实际部署(部署细节在图中)
+- [ ] 浏览器原理
 
-### 1.8.架构开发（拓展）
+- [ ] JS/TS/JSX/TSX 笔记重构
+- [ ] React/Vue 笔记重构
+- [ ] Antd/Arco 笔记重构
+- [ ] Tailwind CSS 笔记重构
+- [ ] Daisyui 笔记重构
+
+#### 1.4.集群开发
+
+-   [x] ~~初步部署工作室的第一台测试 ESXI 机器~~
+-   [x] ~~联系服务器厂商搭建集群的相关方案~~
+-   [ ] 购买主机柜
+-   [ ] 部署 ESXI 操作系统
+-   [ ] 部署 vSphere 套件
+    -   [ ] [vSphere 官方架构文档](https://docs.vmware.com/cn/VMware-vSphere/index.html)
+    -   [ ] [vSphere 博客梳理文档](https://blog.csdn.net/weixin_44837286/article/details/106221679?sharetype=blogdetail&shareId=106221679&sharerefer=APP&sharesource=m0_73168361&sharefrom=link)   
+    -   [ ] [vSphere 发行版概述](https://docs.vmware.com/cn/VMware-vSphere/8.0/rn/vmware-vsphere-80-release-notes/index.html)
+    -   [ ] [vSphere-esxi 安装手册](https://docs.vmware.com/cn/VMware-vSphere/8.0/vsphere-esxi-installation/GUID-B2F01BF5-078A-4C7E-B505-5DFFED0B8C38.html)
+    -   [ ] [vSphere-vcenter server 安装手册](https://docs.vmware.com/cn/VMware-vSphere/8.0/vsphere-vcenter-installation/GUID-8DC3866D-5087-40A2-8067-1361A2AF95BD.html)
+    -   [ ] [部署和理论学习](https://www.bilibili.com/video/BV1J94y1B7sR/?spm_id_from=333.337.search-card.all.click&vd_source=c92c89dbfcf9cc30c48086469621f35b)
+-   [ ] 学习 K8s 基础知识
+-   [ ] 绘制工作室架构图
+-   [ ] 安装 K8s 核心组件
+-   [ ] 部署 4H8G 共 80 台 Node
+-   [ ] 检查完毕后，开发 work-rapid-deployment 项目用来快熟部署项目
+
+#### 1.6.架构开发
 
 - [ ] [阅读文章](https://time.geekbang.org/column/article/9369)
 - [ ] [阅读文章](https://time.geekbang.org/column/article/10603)
@@ -150,21 +89,23 @@
   - [ ] 降级
   - [ ] 熔断
 
-### 1.9.算法开发（拓展）
+#### 1.7.算法开发
 
 - [ ] 刷完 BITE 所有算法课程
-  - [ ] 基础算法课程
-  - [ ] 贪心算法课程
-  - [ ] 动态规划算法课程
-  - [ ] 递归算法、回溯算法、搜索算法课程
 - [ ] 高强度力扣算法题目刷题
-  - [ ] 基础题目
-    - [ ] [数组和字符串刷题](https://leetcode.cn/leetbook/read/array-and-string/clpgd/)
-    - [ ] ...
-  - [ ] 分类题目
-    - [ ] ...
+    - [ ] 基础题目
+        - [ ] [数组和字符串刷题](https://leetcode.cn/leetbook/read/array-and-string/clpgd/)
+        - [ ] ...
+    - [ ] 分类题目
+        - [ ] ...
 
-### 1.10.机学开发（拓展）
+#### 1.8.审查开发
+
+- [ ] [CI/CD 基础学习](https://www.codefather.cn/course/1793910103252721665)
+- [ ] [阅读项目流程博文](https://www.codefather.cn/course/1789189862986850306/section/1789190839475347458?contentType=text&tabKey=info&type=#) + 产出工作室设计规格书
+- [ ] [阅读协作开发博文](https://www.codefather.cn/course/1789189862986850306/section/1789190804671012866?contentType=text&tabKey=info&type=#heading-9) + 产出工作室自部署
+
+#### 1.9.机学开发
 
 - [ ] 高等数学
 - [ ] 线型代数
@@ -172,7 +113,7 @@
 - [ ] YouTube 吴恩达《Machine Learning》
 - [ ] 西瓜书
 
-### 1.11.测试开发（拓展）
+#### 1.10.测试开发
 
 - [ ] [JUnit 文档](https://junit.org/junit5/docs/current/user-guide/)
 - [ ] [You Still Don’t Know How to Do Unit Testing](https://stackify.com/unit-testing-basics-best-practices/)
@@ -181,7 +122,7 @@
 - [ ] 《[完美软件：对软件测试的各种幻想](https://book.douban.com/subject/4187479/)》
 - [ ] 《[Google软件测试之道](https://book.douban.com/subject/25742200/)》
 
-### 1.12.安全开发（拓展）
+#### 1.11.安全开发
 
 - [ ] [OWASP TOP 10](https://owasp.org/www-project-top-ten/)
 - [ ] [伯克立大学在线课程](https://security.berkeley.edu/secure-coding-practice-guidelines)
@@ -190,7 +131,7 @@
 - [ ] [The Art of Defensive Programming](https://www.google.com.hk/search?q=The+Art+of+Defensive+Programming&oq=The+Art+of+Defensive+Programming&gs_lcrp=EgZjaHJvbWUyBggAEEUYOdIBCDU4NzVqMGo0qAIAsAIB&sourceid=chrome&ie=UTF-8)
 - [ ] [Overly defensive programming](https://medium.com/@vcarl/overly-defensive-programming-e7a1b3d234c2)
 
-### 1.13.运维开发（拓展）
+#### 1.12.运维开发
 
 - [ ] [阅读文章](https://time.geekbang.org/column/article/11665)
 - [ ] [Server Side checklist](https://github.com/mtdvio/going-to-production/blob/master/serverside-checklist.md)
@@ -199,39 +140,24 @@
 
 :::
 
-::: details 2.工作项目（必做）
+### 2.工作项目
 
-## 2.工作项目（必做）
+::: details
 
-- [ ] 工作室签到系统项目
-  - [ ] 项目容器封装 
-- [ ] 工作室从化小镇项目
-  - [ ] 项目容器封装
-- [ ] 工作室文档平台项目
-  - [x] ~~迁移所有笔记~~
-  - [x] ~~整理皓叔路线~~
-  - [x] ~~整理浏览标签~~
-  - [x] ~~整理浏览主页~~
-  - [x] ~~整理浏览插件~~
-  - [x] ~~整理浏览习惯~~
-  - [x] 项目容器封装
-  - [ ] 规范文档网站
-  - [ ] 搭建资源共享
-  - [ ] 规范项目笔记
-    - [x] ~~整理 C 初阶笔记~~
-    - [ ] 整理 C 进阶笔记
-    - [ ] 整理 Cpp 初阶笔记
-    - [ ] 整理 Cpp 进阶笔记
-    - [ ] 整理 Java 初阶笔记
-    - [ ] 整理 Java 进阶笔记
-    - [ ] 整理系统网络笔记
-- [ ] 工作室智能面试系统
-  - [ ] [工作室在线题库项目](https://www.codefather.cn/course/1826803928691945473/section/1826806264818610177?type=#heading-0)
-  - [ ] [工作室在线判题项目](https://www.codefather.cn/course/1790980707917017089)
-  - [ ] [工作室在线代码项目](https://www.codefather.cn/course/1810248042696790018)
-- [ ] [工作室伙伴匹配项目](https://www.codefather.cn/course/1790950013153095682)
-- [ ] [工作室用户中心项目](https://www.codefather.cn/course/1790943469757837313)
+- [ ] 工作室内网穿透设施
+- [ ] 工作室网络魔法设施
+- [ ] 工作室文件传输服务
+- [ ] 工作室快速部署服务
+- [ ] [工作室用户中心服务](https://www.codefather.cn/course/1790943469757837313)
 - [ ] [工作室开放接口项目](https://www.codefather.cn/course/1790979723916521474)
+- [ ] 工作室智能面试系统
+    - [ ] [工作室在线题库项目](https://www.codefather.cn/course/1826803928691945473/section/1826806264818610177?type=#heading-0)
+    - [ ] [工作室在线判题项目](https://www.codefather.cn/course/1790980707917017089)
+    - [ ] [工作室在线代码项目](https://www.codefather.cn/course/1810248042696790018)
+- [ ] 工作室文档平台项目
+- [ ] 工作室签到系统项目
+- [ ] 工作室从化小镇项目
+- [ ] [工作室伙伴匹配项目](https://www.codefather.cn/course/1790950013153095682)
 - [ ] [工作室错误边缘项目](https://www.codefather.cn/course/1789199181551738882/section/1789199215798231042?type=#heading-0)
 - [ ] [工作室智能分析项目](https://www.codefather.cn/course/1790980531403927553)
 - [ ] [工作室代码生成项目](https://www.codefather.cn/course/1790980795074654209)
@@ -251,9 +177,9 @@
 
 :::
 
-::: details 3.技术影响（必做）
+### 3.技术影响
 
-## 3.技术影响（必做）
+::: details 3.技术影响
 
 - [ ] C 推广影响链接
 - [ ] Z 精选问答楼群
@@ -268,9 +194,9 @@
 
 :::
 
-::: details 4.其他事件（选做）
+### 4.源码阅读
 
-## 4.源码阅读（选做）
+::: details 4.源码阅读
 
 - [ ] Redis（C）
 - [ ] Linux（C）
@@ -279,16 +205,20 @@
 - [ ] Spring（Java）
 - [ ] Typroa Plus（Node.js）
 
-## 5.其他事务（选做）
+:::
 
-### 5.1.面试就业（选做）
+### 5.其他事务
 
-#### 5.1.1.时间节点
+::: details 5.其他事务
+
+#### 5.1.面试就业
+
+##### 5.1.1.时间节点
 
 - [ ] 春招 3初-4末
 - [ ] 秋招 7初-9末
 
-#### 5.1.2.招聘信息
+##### 5.1.2.招聘信息
 
 - [ ] 企业官网
 - [ ] 牛客招聘
@@ -297,24 +227,24 @@
 - [ ] 鱼皮导航
 - [ ] 老板直聘
 
-#### 5.1.3.自我介绍
+##### 5.1.3.自我介绍
 
 - [ ] 介绍台词
 
-#### 5.1.4.面试方式
+##### 5.1.4.面试方式
 
 - [ ] 提前批
 - [ ] 预面试
 - [ ] 内推码
 
-#### 5.1.5.个人简历
+##### 5.1.5.个人简历
 
 - [ ] 技能清单
 - [ ] 项目列表
 - [ ] 比赛证书
 - [ ] 源码阅读
 
-#### 5.1.6.相关资料
+##### 5.1.6.相关资料
 
 - [ ] BITE 模拟面试
 - [ ] BITE 面试资料
@@ -322,7 +252,7 @@
 - [ ] 面试指北
 - [ ] 耗子哥文档
 
-### 5.2.证书比赛（选做）
+#### 5.2.证书比赛
 
 - [ ] 蓝桥杯
 - [ ] 挑战杯
@@ -331,7 +261,7 @@
 - [ ] 大创比赛
 - [ ] 华为比赛
 
-### 5.3.各种杂事（选做）
+#### 5.3.各种杂事
 
 - [x] ~~分配工作室成员任务~~
 - [x] ~~分配一台 128G 考试系统机器~~
@@ -363,9 +293,31 @@
 
 :::
 
-::: details 5.进度回溯（日常）
+## 时间
 
-## 2025-01-11
+### 大四
+
+::: details 大四
+
+:::
+
+### 大三
+
+::: details 大三
+
+:::
+
+### 寒假
+
+::: details 寒假
+
+#### 2025-01-10
+
+- [x] ~~课程的所有作业补回~~
+- [x] ~~课程的所有考试复习~~
+- [x] ~~课程的所有课设结项~~
+
+#### 2025-01-11
 
 - [x] ~~阅读《人月神话》~~
 - [x] ~~阅读《浪潮之巅》~~
@@ -373,7 +325,7 @@
 - [x] ~~完善工作室文档平台项目的页面逻辑，并且封装为 docker~~
 - [x] ~~acc >= 11.70~~
 
-## 2025-01-12
+#### 2025-01-12
 
 - [x] ~~购买集群文章留后续阅读~~
 - [x] ~~尝试部署 Gitea 镜像~~
@@ -381,7 +333,7 @@
 - [x] ~~阅读《Scalable Web Architecture and Distributed Systems》~~
 - [x] ~~完善工作室题库面试项目的拓展逻辑~~
 
-## 2025-01-13
+#### 2025-01-13
 
 - [x] ~~完善工作室题库面试项目的拓展逻辑~~
 - [x] ~~尽可能多初始化新的 ESXi 主机, 并且尝试永久解决跳过 CPU 检测~~
@@ -389,92 +341,92 @@
 - [x] ~~编写集群架构基础的博文~~
 - [x] ~~工作室任务的通知~~
 
-## 2025-01-14
+#### 2025-01-14
 
 - [x] ~~拓展用户功能模块：刷题记录日历~~
 - [x] ~~128G 主机尝试禁止睡眠~~
 
-## 2025-01-15
+#### 2025-01-15
 
 - [x] ~~拓展用户功能模块：分词快速检索~~
 - [x] ~~arc >= 11.80~~
 
-## 2025-01-16
+#### 2025-01-16
 
 - [x] ~~检查宿舍内~~
 - [x] ~~检查工作室~~
 - [x] ~~检查工程部~~
 - [x] ~~填申请表单~~
 
-## 2025-01-17
+#### 2025-01-17
 
 - [x] ~~休息~~
 
-## 2025-01-18
+#### 2025-01-18
 
 - [x] ~~休息~~
 - [x] ~~规划 Git 分支路线~~
 
-## 2025-01-19
+#### 2025-01-19
 
 - [x] ~~尝试二两 100 ml~~
 - [x] ~~拓展管理功能模块：批量处理操作~~
 
-## 2025-01-20
+#### 2025-01-20
 
 - [x] ~~拓展管理功能模块：热点数据缓存~~
 
-## 2025-01-21
+#### 2025-01-21
 
 - [x] ~~绘制架构图~~
 
-## 2025-01-22
+#### 2025-01-22
 
 - [x] ~~绘制架构图~~
 
-## 2025-01-23
+#### 2025-01-23
 
 - [x] ~~绘制架构图~~
 - [x] ~~拓展流量安全功能模块：限制流量~~
 
-## 2025-01-24
+#### 2025-01-24
 
 - [x] ~~拓展流量安全功能模块：限制名单~~
 
-## 2025-01-25
+#### 2025-01-25
 
 - [x] ~~拓展内容安全功能模块：同端互斥~~
 - [x] ~~拓展内容安全功能模块：反爬机制~~
 - [x] ~~迁移 BIT 账户~~
 
-## 2025-01-27
+#### 2025-01-27
 
 - [x] ~~编写工作室用户中心系统文档~~
 - [x] ~~编写工作室内网穿透软件代码~~
 - [x] ~~处理文档系统的部署问题和发布问题~~
 
-## 2025-01-28
+#### 2025-01-28
 
 - [x] ~~编写工作室用户中心系统文档~~
 - [x] ~~测试工作室内网穿透软件运行~~
 
-## 2025-02-03
+#### 2025-02-03
 
 - [x] ~~彻底完成在线题库系统~~
 - [x] ~~初步学习 Go 的使用~~
 - [x] ~~初步设计用户中心系统~~
 
-## 2025-02-04
+#### 2025-02-04
 
 - [x] ~~发布 CSDN 博文~~
 - [x] ~~初步学习 Go 的大部分知识~~
 - [x] ~~观看《哪吒 2》~~
 
-## 2025-02-05
+#### 2025-02-05
 
 -   [x] ~~回广州~~
 
-## 2025-02-06
+#### 2025-02-06
 
 - [x] ~~初步学完 Go 的剩余知识~~
 - [x] ~~彻底阅读《云计算基础与实践》~~
@@ -486,19 +438,19 @@
     -   [x] ~~https://learn.microsoft.com/en-us/azure/architecture/guide/arhitecture-styles/microservices~~
     -   [x] ~~https://www.vmware.com/topics/microservices~~
 
-## 2025-02-07
+#### 2025-02-07
 
 -   [x] ~~系统学习 Gitea，并且尝试做部署~~
 -   [x] ~~部署 PG 数据库~~
 
-## 2025-02-08
+#### 2025-02-08
 
 - [x] ~~系统学习 Nacos，并且尝试做部署~~
 - [x] ~~系统学习 MinIO，并且尝试做部署~~
 - [x] ~~系统学习 AList，并且尝试做部署~~
 - [x] ~~初次编写萌娘百科~~
 
-## 2025-02-09
+#### 2025-02-09
 
 - [x] ~~整理耗叔资源~~
 
@@ -508,56 +460,83 @@
 
 - [x] ~~浏览器原理 https://coolshell.cn/articles/9666.html~~
 
-## 2025-02-10
+#### 2025-02-10
 
 -   [x] ~~出门进行光合作用~~
 
-## 2025-02-11
+#### 2025-02-11
 
 - [x] ~~Maven 的系统学习~~
 - [x] ~~发布双平台的博文~~
 - [x] ~~做一顿相当可以的饭菜~~
 - [x] ~~学习 K8s~~
 
-## 2025-02-12
+#### 2025-02-12
 
 - [x] ~~陪检~~
 - [x] ~~出勤~~
 - [x] ~~JDBC 的系统学习~~
 
-## 2025-02-13
+#### 2025-02-13
 
 - [x] ~~MyBatis 的系统学习~~
 
-## 2025-02-14
+#### 2025-02-14
 
 - [x] ~~MyBatis 的插件 MyBatisX 的学习~~
 
-## 2025-02-15
+#### 2025-02-15
 
-- [ ] MyBatisPlus 的学习
-- [ ] 阅读《创建 Go 模块》文档
-- [ ] 整理关于 Linux 指令文章
-- [ ] 整理关于 Linux 容器技术软件文章，发布博文
-- [ ] 对比微服务架构和 SOA 架构
-    -   [ ] https://www.f5.com/company/blog/nginx/introduction-to-microservices
-    -   [ ] https://dzone.com/articles/microservices-vs-soa-2
-    -   [ ] https://dzone.com/articles/microservices-vs-soa-is-there-any-difference-at-al
-    -   [ ] https://developer.ibm.com/depmodels/cloud/
-- [ ] 浏览器原理
+- [x] ~~MyBatis 的继续学习~~
+- [x] ~~导入 WM 资料~~
+- [x] ~~重新整理工程实践步骤~~
+- [x] ~~尝试使用原子组件~~
 
-    - [ ] https://web.dev/articles/howbrowserswork?hl=zh-cn
-    - [ ] https://arvindr21.github.io/howBrowserWorks/#/
-    - [ ] https://taligarsiel.com/Projects/howbrowserswork1.htm#Communication_between_the_components
+#### 2025-02-16
+
+- [x] ~~阅读《kubernetes-handbook》~~
+- [x] ~~彻底理解乌蒙的玩法~~
+
+#### 2025-02-17
+
+- [x] ~~初步阅读《kubernetes-handbook》~~
+
+#### 2025-02-18
+
+-   [x] ~~学习 K8s~~
+
+#### 2025-02-19
+
+-   [x] ~~学习 K8s~~
+
+#### 2025-02-20
+
+-   [x] ~~学习 K8s~~
+
+#### 2025-02-21
+
+-   [x] ~~学习 K8s~~
+
+#### 2025-02-22
+
+-   [x] ~~学习 K8s~~
+
+#### 2025-02-23
+
+-   [x] ~~学习 K8s~~
+
+#### 2025-02-20
 
 
-- [ ] 编写 work-magic-circle
-- [ ] 编写 work-project-proxy
+
+#### 2025-02-21
+
+-   [ ] 回校收拾东西
+-   [ ] 寻找资历书籍
+
+-   [ ] 编写 work-magic-circle
 
 
-
-
-- [ ] 系统学习《Java 核心卷 I》，制作笔记
 - [ ] 系统学习 Elasticsearch，制作笔记
 - [ ] 系统学习 Hotkey，制作笔记
 - [ ] 系统学习 Sentinel，制作笔记

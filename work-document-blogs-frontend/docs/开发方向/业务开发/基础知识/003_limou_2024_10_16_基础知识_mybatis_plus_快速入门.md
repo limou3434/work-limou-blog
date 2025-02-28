@@ -539,6 +539,10 @@ public class App {
 
 ```
 
+>   [!IMPORTANT]
+>
+>   补充：`setInt` 通过 `JDBC` 驱动绑定参数，而不是直接拼接 `SQL` 语句，从而防止 `SQL` 注入。数据库会预编译 `SQL` 语句，参数不会改变 `SQL` 逻辑，只会作为变量传递。并且 `JDBC` 通过二进制协议传输参数，不会将参数解析为 `SQL` 语法。
+
 ###### 3.1.1.2.2.链接池化
 
 这里还有再补充一些，链接是比较昂贵的资源，如果反复创建就会导致低效。因此我们需要有复用已经存在的链接的能力，那么我们就需要有一个连接池，这个连接池用 `Java` 来维护是最好的，比较出名的链接池技术就是引入 `HikariCP`，下面就是我们需要修改的 `pom.xml` 文件。
@@ -1947,7 +1951,7 @@ public interface StudentsMapper {
 >       ```java
 >       // @Results & @Result
 >       import org.apache.ibatis.annotations.*;
->                       
+>                               
 >       public interface UserMapper {
 >           @Select("SELECT user_id, user_name FROM users WHERE id = #{id}")
 >           @Results({
@@ -1956,7 +1960,7 @@ public interface StudentsMapper {
 >           })
 >           User getUser(int id);
 >       }
->                       
+>                               
 >       ```
 >
 >   *   **@One & @Many, 一对一/一对多关联查询**：解决一对一和一对多关系的数据查询。
@@ -1969,12 +1973,12 @@ public interface StudentsMapper {
 >       user_table_id             INT       用户的唯一 ID
 >       user_table_name	          VARCHAR	用户的姓名
 >       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
->                       
+>                               
 >       departments 表包含以下字段:
 >       字段名	  类型	说明
 >       departments_table_id	  INT	    部门的唯一 ID
 >       departments_table_name    VARCHAR   部门的名称
->                       
+>                               
 >       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
 >       想要获取完整的 Department 对象, 需要查 departments 表,
 >       并且假设 User Bean 实体和 Department Bean 实体长下面这样
@@ -1990,16 +1994,16 @@ public interface StudentsMapper {
 >           private List<User> users; // 该部门的用户列表
 >           // ...
 >       }
->                       
+>                               
 >       并且已经编写好
 >       public interface DepartmentMapper {
 >           @Select("SELECT department_entity_id, department_entity_name FROM departments WHERE id = #{deptId}")
 >           Department getDepartment(int deptId);  // 根据 deptId 查询部门信息
 >       }
 >       */
->                       
+>                               
 >       import org.apache.ibatis.annotations.*;
->                       
+>                               
 >       public interface UserMapper {
 >           @Select("SELECT * FROM users WHERE user_table_id = #{id}") // 根据用户传递的参数填充 SQL 模板后查询得到所有符合 id 值的用户
 >           @Results({ // 但是执行结果中由于数据表字段和实体类字段不统一, 需要进行映射
@@ -2010,7 +2014,7 @@ public interface StudentsMapper {
 >           })
 >           User getUserWithDepartment(int id);
 >       }
->                       
+>                               
 >       ```
 >       
 >       ```java
@@ -2021,12 +2025,12 @@ public interface StudentsMapper {
 >       user_table_id             INT       用户的唯一 ID
 >       user_table_name	          VARCHAR	用户的姓名
 >       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
->                       
+>                               
 >       departments 表包含以下字段:
 >       字段名	  类型	说明
 >       departments_table_id	  INT	    部门的唯一 ID
 >       departments_table_name    VARCHAR   部门的名称
->                       
+>                               
 >       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
 >       想要获取完整的 Department 对象, 需要查 departments 表,
 >       并且假设 User Bean 实体和 Department Bean 实体长下面这样
@@ -2042,7 +2046,7 @@ public interface StudentsMapper {
 >           private List<User> users; // 该部门的用户列表
 >           // ...
 >       }
->                       
+>                               
 >       并且已经编写好
 >       public interface UserMapper {
 >           @Select("SELECT user_table_id, user_table_name, use_table_dept_id FROM users WHERE use_table_dept_id = #{deptId}")
@@ -2052,9 +2056,9 @@ public interface StudentsMapper {
 >           })
 >           List<User> getUsersByDepartmentId(int deptId);
 >       }
->                       
+>                               
 >       */
->                       
+>                               
 >       public interface DepartmentMapper {
 >           @Select("SELECT departments_table_id, departments_table_name FROM departments WHERE departments_table_id = #{deptId}")
 >           @Results({
@@ -2065,7 +2069,7 @@ public interface StudentsMapper {
 >           })
 >           Department getDepartmentById(int deptId); // Department 中包含用户列表
 >       }
->                       
+>                               
 >       ```
 >
 >   -   **@Param, 传递多个参数**：在 `SQL` 语句中传递多个参数时，避免 `#{arg0}`、`#{arg1}` 这种不直观的写法。
@@ -2109,14 +2113,14 @@ public interface StudentsMapper {
 >       ```java
 >       // @ResultMap
 >       import org.apache.ibatis.annotations.*;
->                       
+>                               
 >       public interface UserMapper {
->                       
+>                               
 >           // 定义查询语句，并引用已有的映射规则
 >           @Select("SELECT * FROM users WHERE id = #{id}")
 >           @ResultMap("userResultMap") // 引用已经定义好的映射规则
 >           User getUser(int id); // 返回一个 User 对象
->                       
+>                               
 >           // 定义一个映射规则
 >           @Results(id = "userResultMap", value = {
 >               @Result(column = "id", property = "id"),
@@ -2124,7 +2128,7 @@ public interface StudentsMapper {
 >           })
 >           User getUserById(int id);
 >       }
->                       
+>                               
 >       ```
 >
 >
@@ -2838,13 +2842,13 @@ public class Main {
 
 到 `MyBatisPlus` 这里，我们就需要对我们编写数据库操作做一个规范了，这个规范就是工作室数据操作的规范，也是我一直采用的规范，这个规范将会带您再下面的代码实践环节中进行实践，开发一个用户表的增删查改。
 
-由于 `MyBatisPlus` 是对 `MyBatis` 的强化，我们需要提前了解前要知识，避免后续的内容一知半解。
-
-##### 3.1.3.2.使用
-
 >   [!CAUTION]
 >
 >   警告：不过由于 `MyBatisPlus` 最好是结合 `Spring` 系列的全家桶来使用，如果您没有使用 `Spring` 的经历，最好先学习完 `Spring` 的相关内容（至少阅读过 `Spring` 和 `SpringBoot` 的文章后再回来阅读这里后面的知识）。
+
+由于 `MyBatisPlus` 是对 `MyBatis` 的强化，我们需要提前了解前要知识，避免后续的内容一知半解。
+
+##### 3.1.3.2.使用
 
 ![image-20250215004740517](./assets/image-20250215004740517.png)
 

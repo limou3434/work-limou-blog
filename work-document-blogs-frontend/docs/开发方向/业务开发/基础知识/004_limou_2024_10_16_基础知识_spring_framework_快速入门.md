@@ -163,7 +163,7 @@ $ tree -L 6 .
   <!-- 定义项目的版本号 -->
   <version>0.1.0</version>
   <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
-  <name>work-project</name>
+  <name>work-spring-framework-test</name>
   <!-- 填写为本项目制定的官方网址 -->
   <url>https://work.com</url>
   <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
@@ -443,7 +443,7 @@ userService.setMailService(mailService);
 
 当然，我们可以使用更为现代的注解来避免编写 `.xml`：
 
--   使用 `@Component` 来创建一个 `Baen`，使用 `@Autowired` 来标明注入字段，或者用 `@Autowired 字段类型 函数参数` 来标明注入参数（可以用在构造方法和 `setter` 中，另外 `Spring 4.3` 之后，如果只有一个构造方法，并且构造参数中的类型已经注册过 `Bean`，`Spring` 会自动注入，不再需要 `@Autowired`，代码更加简洁，我个人更加倾向于加上）。
+-   使用 `@Component` 来创建一个 `Baen`，使用 `@Autowired` 来标明注入字段，或者用 `@Autowired 字段类型 函数参数` 来标明注入参数（可以用在构造方法和 `setter` 中，另外 `Spring 4.3` 之后，如果只有一个构造方法，并且构造参数中的类型已经注册过 `Bean`，`Spring` 会自动注入，不需要 `@Autowired`，代码更加简洁，我个人更加倾向于加上）。
 -   在主类中使用 `@ComponentScan` 用于指定 `Spring` 需要扫描的包路径，这样 `@Component` 等标注的类会被自动发现，并注册为 `Spring Bean`。
 
 ```shell
@@ -494,7 +494,7 @@ $ tree -L 6 .
   <!-- 定义项目的版本号 -->
   <version>0.1.0</version>
   <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
-  <name>work-project</name>
+  <name>work-spring-framework-test</name>
   <!-- 填写为本项目制定的官方网址 -->
   <url>https://work.com</url>
   <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
@@ -1418,7 +1418,7 @@ public class SecurityCheckBookService implements BookService {
   <!-- 定义项目的版本号 -->
   <version>0.1.0</version>
   <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
-  <name>work-project</name>
+  <name>work-spring-framework-test</name>
   <!-- 填写为本项目制定的官方网址 -->
   <url>https://work.com</url>
   <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
@@ -1867,10 +1867,10 @@ public class App {
 >      public UserService$$EnhancerBySpringCGLIB extends UserService {
 >          UserService target;
 >          LoggingAspect aspect;
->      
+>          
 >          public UserService$$EnhancerBySpringCGLIB() {
 >          }
->      
+>          
 >          public ZoneId getZoneId() {
 >              aspect.doAccessCheck();
 >              return target.getZoneId();
@@ -1897,85 +1897,466 @@ public class App {
 
 #### 3.1.3.访问数据
 
+到这里我们开启了 `IoC` 和 `AOP` 的大门，我们此时依靠这两个工具将大大简化我们的代码，我们先把我们之前使用 `JDBC` 的代码搬出来，然后用 `Spring Framework` 的方式来重写。
 
+```java
+// App.java
+package com.work;
 
-#### 3.1.4.服务开发
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.HikariPoolMXBean;
 
+import java.sql.*;
 
+public class App {
+    public static void main(String[] args) {
+        System.out.println("Hello JDBC!");
 
-#### 3.1.5.模块集成
+        // 1. 获取链接
+        /*
+        Connection 代表一个 JDBC 连接, 其实就是获得 Java 程序和 MySQL 直接的 TCP 连接
+        因此打开一个 Connection 时, 需要准备 url、user、passwd(根据厂家规定来设置), 这样才能成功连接
+        而连接到数据库的本 Java 程序其实也被叫做 MySQL 的客户端
+        */
+        String JDBC_URL = "jdbc:mysql://localhost:3306/work_jdbc_test";
+        String JDBC_USER = "limou";
+        String JDBC_PASSWORD = "123456";
 
+        /* 这里新添加了连接池的设置, 改用连接池的方式来管理 MySQL */
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(JDBC_URL);
+        config.setUsername(JDBC_USER);
+        config.setPassword(JDBC_PASSWORD);
+        config.setMaximumPoolSize(10); // 本链接池最多允许的链接数为 10 个, 这一句代码和 config.addDataSourceProperty("maximumPoolSize", "10") 等价, 但是直接写字符串过于灵活有可能难以维护
+        config.setMinimumIdle(2); // 本链接池最少存在的链接接数为 2 个
+        config.setIdleTimeout(60000); // 如果链接空闲超时 60 秒就会被销毁无法再次被复用
+        config.setConnectionTimeout(1000); // 无法获得链接超时 1 秒时就会抛出异常, 以提示本链接池中链接资源紧缺, 超出最大的设置值
 
+        // 创建 DataSource 也是一个非常昂贵的操作, 所以通常 DataSource 实例总是作为一个全局变量存储, 并贯穿整个应用程序的生命周期
+        try (HikariDataSource hkds = new HikariDataSource(config)) {
+            // try 可以确保执行完毕后自动将比较昂贵的 conn 链接释放, 下面的 try 也是类似
+            try (
+                    Connection conn = hkds.getConnection()
+                    // Connection conn = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)
+            ) {
+              // 2. 操作链接
+            }
+            catch (SQLException e) {
+                System.out.println("Error connecting to database: " + e.getMessage());
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error creating hikariDataSource: " + e.getMessage());
+        }
+    }
+}
+
+```
+
+开始进行部分改写。
+
+```sql
+-- work-jdbc-test.sql
+-- 创建数据库 work-jdbc-test
+DROP DATABASE IF EXISTS work_jdbc_test; -- 这里故意在数据库存在时直接删除整个数据库, 方便我们进行重复的调试
+CREATE DATABASE work_jdbc_test;
+
+-- 创建一个登录用户
+CREATE USER IF NOT EXISTS limou@'%' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON work_jdbc_test.* TO limou@'%' WITH GRANT OPTION;
+FLUSH PRIVILEGES;
+
+-- 创建表 students
+USE work_jdbc_test;
+CREATE TABLE students (
+                          id BIGINT AUTO_INCREMENT NOT NULL,
+                          name VARCHAR(50) NOT NULL,
+                          gender TINYINT(1) NOT NULL,
+                          grade INT NOT NULL,
+                          score INT NOT NULL,
+                          PRIMARY KEY(id)
+) Engine=INNODB DEFAULT CHARSET=UTF8;
+
+-- 插入初始数据
+INSERT INTO students (name, gender, grade, score) VALUES ('小明', 1, 1, 88);
+INSERT INTO students (name, gender, grade, score) VALUES ('小红', 1, 1, 95);
+INSERT INTO students (name, gender, grade, score) VALUES ('小军', 0, 1, 93);
+INSERT INTO students (name, gender, grade, score) VALUES ('小白', 0, 1, 100);
+INSERT INTO students (name, gender, grade, score) VALUES ('小牛', 1, 2, 96);
+INSERT INTO students (name, gender, grade, score) VALUES ('小兵', 1, 2, 99);
+INSERT INTO students (name, gender, grade, score) VALUES ('小强', 0, 2, 86);
+INSERT INTO students (name, gender, grade, score) VALUES ('小乔', 0, 2, 79);
+INSERT INTO students (name, gender, grade, score) VALUES ('小青', 1, 3, 85);
+INSERT INTO students (name, gender, grade, score) VALUES ('小王', 1, 3, 90);
+INSERT INTO students (name, gender, grade, score) VALUES ('小林', 0, 3, 91);
+INSERT INTO students (name, gender, grade, score) VALUES ('小贝', 0, 3, 77);
+
+```
+
+```xml
+<!-- pom.xml -->
+<!--
+ 'xmlns=' XML 命名空间
+ 'xmlns:xsi' XML Schema 实例命名空间
+ 'xsi:schemaLocation=' 指定 XML Schema 位置
+ 这些声明的主要作用是帮助 XML 解析器正确地验证和处理 Maven POM 文件，确保它符合 Maven 规范。
+ -->
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
+>
+  <!-- 指定 Maven 项目对象模型 POM 的版本 -->
+  <modelVersion>4.0.0</modelVersion>
+  <!-- 定义项目的所属组织 -->
+  <groupId>com.work</groupId>
+  <!-- 定义项目的具体名称 -->
+  <artifactId>work-spring-framework-test</artifactId>
+  <!-- 填写依赖的 Java 版本和使用的字符集 -->
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+  </properties>
+  <!-- 指定项目构建的打包类型为 .jar -->
+  <packaging>jar</packaging>
+  <!-- 定义项目的版本号 -->
+  <version>0.1.0</version>
+  <!-- 和 artifactId 的名称保持一样即可(这是一个可选字段) -->
+  <name>work-spring-framework-test</name>
+  <!-- 填写为本项目制定的官方网址 -->
+  <url>https://work.com</url>
+  <!-- 填写所有依赖项的容器, 在内部填写一个一个 dependency 标签 -->
+  <dependencies>
+    <!-- 依赖名称: 依赖官网/依赖源码 -->
+
+    <!-- junit(测试框架): https://junit.org/junit5/ -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>5.9.3</version>
+      <scope>test</scope> <!-- 如果不指定 scope 会默认将依赖设置为 compile 生命阶段, 因此设置 scope 本质是确保某些依赖只在某个阶段被使用 -->
+    </dependency>
+
+    <!-- spring-context(IoC 支持): https://spring.io/projects/spring-framework#learn -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+      <version>6.0.0</version>
+    </dependency>
+
+    <!-- spring-aspects(AOP 支持): https://mvnrepository.com/artifact/org.springframework/spring-aspects -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aspects</artifactId>
+      <version>6.0.0</version>
+    </dependency>
+
+    <!-- jakarta-annotation-api(提供某些额外的通用注解) -->
+    <dependency>
+      <groupId>jakarta.annotation</groupId>
+      <artifactId>jakarta.annotation-api</artifactId>
+      <version>2.1.1</version>
+    </dependency>
+
+    <!-- mysql-jdbc(引入 mysql 对 jdbc 的支持): https://central.sonatype.com/artifact/com.mysql/mysql-connector-j -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>9.2.0</version>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- spring-jdbc(优化对 jdbc 的操作) -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-jdbc</artifactId>
+      <version>6.0.0</version>
+    </dependency>
+
+    <!-- hikari-cp(mysql 链接池组件): https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
+      <version>6.2.1</version>
+    </dependency>
+
+    <!-- SLF4J(日志接口规范): https://github.com/qos-ch/slf4j -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+    </dependency>
+
+    <!-- logback(日志接口实现): https://github.com/qos-ch/logback -->
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.2.10</version>
+    </dependency>
+
+  </dependencies>
+  <!-- 构建插件 -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <!-- 填写启动类 -->
+              <Main-Class>com.work.App</Main-Class>
+            </manifestEntries>
+          </archive>
+          <descriptorRefs>
+            <!-- 集成的最终 .jar 包名称 -->
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>
+
+```
+
+```properties
+# jdbc.properties
+jdbc.url=jdbc:mysql://localhost:3306/work_jdbc_test
+jdbc.username=limou
+jdbc.password=123456
+```
+
+```java
+package com.work;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Component;
+
+import javax.sql.DataSource;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.List;
+
+// 数据库连接池配置
+@Configuration
+@PropertySource("classpath:jdbc.properties")
+class DataConfig {
+    @Value("${jdbc.url}")
+    private String jdbcUrl;
+
+    @Value("${jdbc.username}")
+    private String jdbcUsername;
+
+    @Value("${jdbc.password}")
+    private String jdbcPassword;
+
+    @Bean
+    DataSource createDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(jdbcUrl);
+        config.setUsername(jdbcUsername);
+        config.setPassword(jdbcPassword);
+        config.setMaximumPoolSize(10);
+        config.setMinimumIdle(2);
+        config.setIdleTimeout(60000);
+        config.setConnectionTimeout(1000);
+
+        return new HikariDataSource(config);
+    }
+
+    @Bean
+    JdbcTemplate createJdbcTemplate(DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+}
+
+// 用户实体类
+class Student {
+    private long id;
+    private String name;
+
+    public Student() {}
+
+    public Student(long id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        return "Student{id=" + id + "', name='" + name + "'}";
+    }
+}
+
+// 用户服务类
+@Component
+class UserService {
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    // 查询单个用户
+    public Student getStudentById(long id) {
+        /* 链接实例自动创建
+        return jdbcTemplate.execute((Connection conn) -> {
+            try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM students WHERE id = ?")) {
+                ps.setObject(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        return new Student(
+                            rs.getLong("id"),
+                            rs.getString("name")
+                        );
+                    }
+                    throw new RuntimeException("Student not found by id: " + id);
+                }
+            }
+        });
+        */
+
+        /* 链接实例直接去掉, 语句实例自动创建
+        return jdbcTemplate.execute("SELECT * FROM students WHERE id = ?", (PreparedStatement ps) -> {
+            ps.setObject(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Student(
+                            rs.getLong("id"),
+                            rs.getString("name")
+                    );
+                }
+                throw new RuntimeException("Student not found by id: " + id);
+            }
+        });
+        */
+
+        /* 链接实例直接去掉, 语句实例直接去掉, 返回集合自动创建  */
+        return jdbcTemplate.queryForObject("SELECT * FROM students WHERE id = ?", (ResultSet rs, int rowNum) -> {
+            System.out.println("Processing row: " + rowNum);
+            return new Student(
+                    rs.getLong("id"),
+                    rs.getString("name")
+            );
+        }, id);
+    }
+
+    // 查询多个用户
+    public List<Student> getStudentsByGender(long gender) {
+        /* 如果需要返回多个记录可以使用 BeanPropertyRowMapper<>, 但是记录元素类型(这里是指 Student)需要实现无参构造方法, 但是有记忆负担, 因此我推荐下面的写法
+        return jdbcTemplate.query("SELECT * FROM students WHERE gender = ?", new BeanPropertyRowMapper<>(Student.class), gender);
+        */
+
+        /* 推荐写法 */
+        return jdbcTemplate.query("SELECT * FROM students WHERE gender = ?", (ResultSet rs, int rowNum) -> {
+            System.out.println("Processing row: " + rowNum);
+            return new Student(
+                    rs.getLong("id"),
+                    rs.getString("name")
+            );
+        }, gender);
+    }
+
+    // 修改用户(更新)
+    public void updateStudentIsMod(Long selectId, String rename) {
+        // 传入SQL，SQL参数，返回更新的行数:
+        if (1 != jdbcTemplate.update("UPDATE students SET name = ? WHERE id = ?", rename, selectId)) {
+            throw new RuntimeException("Student not found by id"); // 如果没有更新任何行则抛出异常
+        }
+        // else {
+        // ...
+        // }
+    }
+
+    // 修改用户(添加)
+    public void updateStudentIsAdd(String name, String gender, String grade, String score) {
+        // 创建一个KeyHolder:
+        KeyHolder holder = new GeneratedKeyHolder();
+        jdbcTemplate.update(connection -> { // 只能这么写
+            PreparedStatement ps = connection.prepareStatement("INSERT INTO students (name, gender, grade, score) VALUES(?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, name);
+            ps.setString(2, gender);
+            ps.setString(3, grade);
+            ps.setString(4, score);
+            return ps;
+        }, holder);
+
+        Number generatedId = holder.getKey();
+        if (generatedId != null) {
+            System.out.println("Generated ID: " + generatedId);
+        }
+    }
+
+    // 至此整个过程中, 使用 Connection、PreparedStatement、ResultSet 都不需要我们自己手动管理, 并在执行完成后关闭它们, 无需使用过多的 try-catch 就是 Spring JDBC 的优势
+    // 在不复杂的 SQL 环境中, 直接使用 Spring JDBC 比使用 Mybatis 要好一些; 但是在复杂的 SQL 环境中, 使用 Mybatis 更好一些
+}
+
+// Spring 扫描
+@ComponentScan
+class AppConfig {
+}
+
+// 主应用程序
+public class App {
+    public static void main(String[] args) {
+        ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class, DataConfig.class);
+
+        UserService userService = context.getBean(UserService.class);
+
+        // 查询 students 表中的用户
+        try {
+            Student student = userService.getStudentById(1L);
+            System.out.println("Found student: " + student);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        // 查询 students 表中的用户
+        try {
+            List<Student> students = userService.getStudentsByGender(0);
+            System.out.println("Found number of students: " + students.size());
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        // 修改 students 表中的用户
+        try {
+            userService.updateStudentIsMod(1L, "limou");
+            System.out.println("Updated student");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+
+        // 添加 students 表中的用户
+        try {
+            userService.updateStudentIsAdd("dimou", "0", "1", "100");
+            System.out.println("Added student");
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+        }
+    }
+}
+
+```
 
 ### 3.2.代码实践
 
-待补充...
-
-
-
-
-
-**后端**  
-
-**编程语言与开发规范**  
-
-- 熟悉 Java 语言，掌握集合框架、Lambda 表达式、Stream 流、自定义注解等核心技术  
-- 遵循阿里 Java 开发规范，代码风格严谨，逻辑清晰  
-- 使用 IDEA 进行开发，Maven 进行依赖管理  
-
-**后端框架与数据库**  
-
-- 熟悉 Spring 全家桶，包括 Spring MVC、Spring Boot、MyBatis、MyBatis-Plus 等框架  
-- 熟悉 Redis，掌握其数据结构、缓存策略与持久化机制  
-- 熟悉 MySQL 和 MongoDB，了解 MySQL 索引优化与 SQL 事务管理  
-
-**常规业务开发**  
-
-- **断点续传**：支持大文件上传，保障传输完整性  
-- **多端会话管理**：基于 Sa-Token 进行同端登录控制  
-- **对象存储管理**：利用 COS 进行静态资源存储与分发  
-- **配置中心**：基于 Nacos 实现动态配置管理  
-- **分词搜索**：借助 Elasticsearch 进行高效全文检索  
-- **权限校验**：采用 Sa-Token 进行细粒度权限控制  
-- **并发检测**：Sa-Token 保障多端并发安全性  
-- **多级缓存**：Redis 分布式缓存 + Caffeine 本地缓存 + Redisson 提供高效缓存方案  
-- **流量控制**：Sentinel 实现服务限流与熔断降级  
-- **热点参数防护**：Sentinel 监控高频请求，优化系统负载  
-- **爬虫防护**：利用 Redisson 限制异常访问，防止数据爬取  
-- **批量操作优化**：合并 SQL 请求，提高数据库吞吐能力  
-- **动态数据筛选**：灵活的查询过滤机制，提高数据查询效率  
-
----
-
-**前端**  
-
-**框架与开发规范**  
-
-- 熟悉 React.js 和 Vue.js，能够根据业务需求定制前端架构  
-- 遵循前端代码规范，结合 ESLint + Prettier + TypeScript + Husky 保证代码质量  
-
-**组件库与工具**  
-
-- 熟悉 Ant Design、ECharts、Element UI、Element Plus 等组件库  
-- 具备使用 Ant Design Pro 框架、Umi OpenAPI 代码生成进行前端开发的能力  
-- 熟练掌握 VS Code、WebStorm 等前端开发工具  
-
----
-
-**运维**  
-
-**Linux 环境管理**  
-
-- 熟悉 Linux，常用 CentOS 和 Ubuntu 进行系统运维  
-- 具备 Shell 脚本编写能力，能够完成基本的系统维护与自动化任务  
-
-**容器化与自动化部署**  
-
-- 熟悉 Docker 容器管理，掌握镜像构建、容器编排、日志管理等  
-- 具备 CI/CD 自动化部署经验，提升开发与运维效率  
-
-**服务器管理与优化**  
-
-- 熟悉 Nginx 反向代理、负载均衡及静态资源优化  
-- 具备服务器优化、性能调优能力，保障系统稳定高效运行  
+这一节我不直接进行代码实践，因为我们需要的工具已经足够我们开始进入正式的业务开发了。
 

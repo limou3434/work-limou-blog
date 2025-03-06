@@ -1438,7 +1438,7 @@ public interface StudentsMapper {
 
 >   [!IMPORTANT]
 >
->   补充：补充：更加详细的内容可以查阅 [映射文件文档](https://mybatis.net.cn/sqlmap-xml.html)。
+>   补充：更加详细的内容可以查阅 [映射文件文档](https://mybatis.net.cn/sqlmap-xml.html)。
 
 ###### 3.1.2.2.4.数据描述
 
@@ -1951,7 +1951,7 @@ public interface StudentsMapper {
 >       ```java
 >       // @Results & @Result
 >       import org.apache.ibatis.annotations.*;
->                                           
+>                                               
 >       public interface UserMapper {
 >           @Select("SELECT user_id, user_name FROM users WHERE id = #{id}")
 >           @Results({
@@ -1960,7 +1960,7 @@ public interface StudentsMapper {
 >           })
 >           User getUser(int id);
 >       }
->                                           
+>                                               
 >       ```
 >
 >   *   **@One & @Many, 一对一/一对多关联查询**：解决一对一和一对多关系的数据查询。
@@ -1973,12 +1973,12 @@ public interface StudentsMapper {
 >       user_table_id             INT       用户的唯一 ID
 >       user_table_name	          VARCHAR	用户的姓名
 >       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
->                                           
+>                                               
 >       departments 表包含以下字段:
 >       字段名	  类型	说明
 >       departments_table_id	  INT	    部门的唯一 ID
 >       departments_table_name    VARCHAR   部门的名称
->                                           
+>                                               
 >       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
 >       想要获取完整的 Department 对象, 需要查 departments 表,
 >       并且假设 User Bean 实体和 Department Bean 实体长下面这样
@@ -1994,16 +1994,16 @@ public interface StudentsMapper {
 >           private List<User> users; // 该部门的用户列表
 >           // ...
 >       }
->                                           
+>                                               
 >       并且已经编写好
 >       public interface DepartmentMapper {
 >           @Select("SELECT department_entity_id, department_entity_name FROM departments WHERE id = #{deptId}")
 >           Department getDepartment(int deptId);  // 根据 deptId 查询部门信息
 >       }
 >       */
->                                           
+>                                               
 >       import org.apache.ibatis.annotations.*;
->                                           
+>                                               
 >       public interface UserMapper {
 >           @Select("SELECT * FROM users WHERE user_table_id = #{id}") // 根据用户传递的参数填充 SQL 模板后查询得到所有符合 id 值的用户
 >           @Results({ // 但是执行结果中由于数据表字段和实体类字段不统一, 需要进行映射
@@ -2014,7 +2014,7 @@ public interface StudentsMapper {
 >           })
 >           User getUserWithDepartment(int id);
 >       }
->                                           
+>                                               
 >       ```
 >       
 >       ```java
@@ -2025,12 +2025,12 @@ public interface StudentsMapper {
 >       user_table_id             INT       用户的唯一 ID
 >       user_table_name	          VARCHAR	用户的姓名
 >       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
->                                           
+>                                               
 >       departments 表包含以下字段:
 >       字段名	  类型	说明
 >       departments_table_id	  INT	    部门的唯一 ID
 >       departments_table_name    VARCHAR   部门的名称
->                                           
+>                                               
 >       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
 >       想要获取完整的 Department 对象, 需要查 departments 表,
 >       并且假设 User Bean 实体和 Department Bean 实体长下面这样
@@ -2046,7 +2046,7 @@ public interface StudentsMapper {
 >           private List<User> users; // 该部门的用户列表
 >           // ...
 >       }
->                                           
+>                                               
 >       并且已经编写好
 >       public interface UserMapper {
 >           @Select("SELECT user_table_id, user_table_name, use_table_dept_id FROM users WHERE use_table_dept_id = #{deptId}")
@@ -2056,9 +2056,9 @@ public interface StudentsMapper {
 >           })
 >           List<User> getUsersByDepartmentId(int deptId);
 >       }
->                                           
+>                                               
 >       */
->                                           
+>                                               
 >       public interface DepartmentMapper {
 >           @Select("SELECT departments_table_id, departments_table_name FROM departments WHERE departments_table_id = #{deptId}")
 >           @Results({
@@ -2069,7 +2069,7 @@ public interface StudentsMapper {
 >           })
 >           Department getDepartmentById(int deptId); // Department 中包含用户列表
 >       }
->                                           
+>                                               
 >       ```
 >
 >   -   **@Param, 传递多个参数**：在 `SQL` 语句中传递多个参数时，避免 `#{arg0}`、`#{arg1}` 这种不直观的写法。
@@ -2113,14 +2113,14 @@ public interface StudentsMapper {
 >       ```java
 >       // @ResultMap
 >       import org.apache.ibatis.annotations.*;
->                                           
+>                                               
 >       public interface UserMapper {
->                                           
+>                                               
 >           // 定义查询语句，并引用已有的映射规则
 >           @Select("SELECT * FROM users WHERE id = #{id}")
 >           @ResultMap("userResultMap") // 引用已经定义好的映射规则
 >           User getUser(int id); // 返回一个 User 对象
->                                           
+>                                               
 >           // 定义一个映射规则
 >           @Results(id = "userResultMap", value = {
 >               @Result(column = "id", property = "id"),
@@ -2128,7 +2128,7 @@ public interface StudentsMapper {
 >           })
 >           User getUserById(int id);
 >       }
->                                           
+>                                               
 >       ```
 >
 >
@@ -2826,15 +2826,15 @@ public class Main {
 
 ###### 3.1.2.2.9.动态语句
 
-有机会补充...
+待补充...
 
 ###### 3.1.2.2.10.语言接口
 
-有机会补充...
+待补充...
 
 ###### 3.1.2.2.11.引入日志
 
-有机会补充...
+待补充...
 
 #### 3.1.3.MyBatisPlus
 
@@ -2846,29 +2846,386 @@ public class Main {
 >
 >   警告：不过由于 `MyBatisPlus` 最好是结合 `Spring` 系列的全家桶来使用，如果您没有使用 `Spring` 的经历，最好先学习完 `Spring` 的相关内容（至少阅读过 `Spring` 和 `SpringBoot` 的文章后再回来阅读这里后面的知识）。
 
-由于 `MyBatisPlus` 是对 `MyBatis` 的强化，我们需要提前了解前要知识，避免后续的内容一知半解。
-
 ##### 3.1.3.2.使用
 
-![image-20250215004740517](./assets/image-20250215004740517.png)
+这里使用 `Spring Boot` 项目进行测试，看看我们是如何使用 `MyBatisPlus` 简化对 `MyBatis` 的使用的。
 
-![image-20250215123427899](./assets/image-20250215123427899.png)
+```xml
+<?xml version="1.0" encoding="UTF-8"?> <!-- pom.xml: 依赖文件 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.work</groupId>
+    <artifactId>work-user-centre</artifactId>
+    <version>0.0.1</version>
+    <name>work-user-centre</name>
+    <description>work-user-centre</description>
+    <url/>
+    <licenses>
+        <license/>
+    </licenses>
+    <developers>
+        <developer/>
+    </developers>
+    <scm>
+        <connection/>
+        <developerConnection/>
+        <tag/>
+        <url/>
+    </scm>
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    <dependencies>
 
-上面这个弹窗的配置我已经一一进行了解释，您看需要进行配置即可，下面是我填写的配置以及生成结果。
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter-test</artifactId>
+            <version>3.0.4</version>
+            <scope>test</scope>
+        </dependency>
 
-![image-20250215123500305](./assets/image-20250215123500305.png)
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
 
-然后就会跳出以下配置。
+        <!-- MyBatis -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>3.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>3.5.10.1</version>
+        </dependency>
 
-![image-20250215211033549](./assets/image-20250215211033549.png)
+    </dependencies>
 
-这里我也配置一份供您参考。
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
-![image-20250215211209896](./assets/image-20250215211209896.png)
+</project>
+
+```
+
+```sql
+-- ./sql/storage_structure.sql: 数据源整体结构
+-- 项目数库
+DROP DATABASE IF EXISTS <填入和项目同名的数据库>;
+CREATE DATABASE <填入和项目同名的数据库> COLLATE = utf8mb4_unicode_ci;
+USE <填入和项目同名的数据库>;
+
+-- 项目用户
+DROP USER IF EXISTS 'work_<填入本项目名字相关的名字所写>'@'%';
+CREATE USER 'work_<填入本项目名字相关的名字所写>'@'%' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON work_user_centre.* TO 'work_uc'@'%';
+FLUSH PRIVILEGES;
+
+-- 项目数表
+CREATE TABLE <填入想要创建的数据表> (
+      id              BIGINT UNSIGNED    AUTO_INCREMENT                                        COMMENT '唯一标识(业务层需要考虑使用雪花算法标识的唯一性)',
+      ...,
+      deleted         TINYINT            DEFAULT 0                                             COMMENT '是否删除(0 为未删除, 1 为已删除)',
+      create_time     TIMESTAMP          DEFAULT CURRENT_TIMESTAMP                             COMMENT '创建时间(受时区影响)',
+      update_time     TIMESTAMP          DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间(受时区影响)',
+      PRIMARY KEY (id), -- 主键
+      ...
+      INDEX idx_email (user_email), -- 根据数据是否具备区分度来建立索引
+      ...
+) COLLATE = utf8mb4_unicode_ci                                                                 COMMENT '用户信息表';
+
+```
+
+```sql
+-- ./sql/init_assumption_data.sql: 数据源模拟数据
+-- 模拟数据
+TRUNCATE TABLE <之前定义的表名>;
+INSERT INTO <之前定义的表名> (<表内字段1, 表内字段2, ...>)
+VALUES
+    (<字段值1, 字段值2, ...>),
+    (<字段值1, 字段值2, ...>,
+     ...
+;
+     
+```
+
+```sql
+-- ./sql/init_actual_data.sql: 数据源真实数据
+-- 项目开发阶段可以不用填写, 不过测试的时候可以用用
+
+```
+
+```java
+// ./src/main/java/com/work/workusercentre/entity/<填入实体类名>.java: 实体类
+package com.work.workusercentre.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+@TableName(value = "user")
+@Data // 使用 Lombok 自动生成 getter, setter, toString, equals, hashCode 方法
+public class <填入实体类名> {
+    @TableId(type = IdType.ASSIGN_ID) // 最好不要使用 IdType.AUTO, 否则有可能有爬取的风险(这里使用雪花递增算法, 生成长整型随机整数), 其他表也需要这样自动生成
+    private Long id; // 本用户唯一标识
+
+    ...
+
+    private Integer deleted; // 是否删除
+
+    private LocalDateTime createTime; // 创建时间
+
+    private LocalDateTime updateTime; // 更新时间
+}
+
+```
+
+```java
+// src/main/java/com/work/workusercentre/mapper/<填入实体类名>Mapper.java: 映射类
+package com.work.workusercentre.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.work.workusercentre.entity.<填入实体类名>;
+
+// @Mapper 或 @MapperScan 注解会自动将 MyBatis 的 Mapper 接口作为 Bean 注入到 Spring 容器中, 因此对于 MyBatis 的 Mapper 接口, 通常不需要加 @Component 注解, 它已经被 MyBatis 扫描并注册为 Spring Bean
+public interface <填入实体类名>Mapper extends BaseMapper<User> {} // 这样就会自动根据实体类, MyBatisPlus 自己编写映射个过程, 不再需要手动编写大量的 .xml 和对应的 .java, 就可以直接使用继承来的大量接口进行使用, 非常方便, 可以查看下关于 BaseMapper 的内部实现
+
+```
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?> <!-- pom.xml: 依赖文件 -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.4.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.work</groupId>
+    <artifactId>work-user-centre</artifactId>
+    <version>0.0.1</version>
+    <name>work-user-centre</name>
+    <description>work-user-centre</description>
+    <url/>
+    <licenses>
+        <license/>
+    </licenses>
+    <developers>
+        <developer/>
+    </developers>
+    <scm>
+        <connection/>
+        <developerConnection/>
+        <tag/>
+        <url/>
+    </scm>
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+    <dependencies>
+
+        <!-- Spring -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter-test</artifactId>
+            <version>3.0.4</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- MyBatis -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>3.0.4</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>3.5.10.1</version>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+```
+
+```yaml
+# ./src/main/resources/application.yaml: 配置文件
+spring:
+  application:
+    name: <填入项目名称>
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver # "com.mysql.jdbc.Driver" 对于当前框架已过时
+    url: jdbc:mysql://localhost:3306/<填入和项目同名的数据库>
+    username: work_<填入本项目名字相关的名字所写>
+    password: 123456
+
+server:
+  port: 8000
+  
+```
+
+```java
+// ./src/main/java/com/work/workusercentre/WorkUserCentreApplication.java: 启动文件
+package com.work.workusercentre;
+
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+@MapperScan("com.work.workusercentre.mapper") // 启用 MyBatisPlus 扫描 ./src/Mapper/ 中的映射
+public class WorkUserCentreApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(WorkUserCentreApplication.class, args);
+        System.out.println("hello");
+    }
+}
+
+```
 
 ### 3.2.代码实践
 
-使用 `MyBatisPlus` 来快速实现对一个用户表的增删查改，待补充...
+
 
 
 

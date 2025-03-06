@@ -934,25 +934,25 @@ public class App {
 
 > [!IMPORTANT]
 >
-> 补充：有时候需要创建多个实例，对于注解 `@Component` 这档事会比较麻烦，因为默认是单例模式。但是如果对于使用 `@Bean`，则可以通过使用别名限定符 `@Qualifier` 来避免在同类不同方法的返回值类型相同时发生冲突（需要创建 `Bean` 和注入 `Bean` 都进行限定）。
+> 补充：有时候需要创建多个实例，对于注解 `@Component` 和 `@Bean` 这档事会比较麻烦，因为默认是单例模式。此时可以通过使用别名限定符 `@Qualifier` 来避免在同类不同方法的返回值类型相同时发生冲突（需要创建 `Bean` 和注入 `Bean` 都进行限定）。
 >
 > ```java
 > // MailService.java
 > @Configuration
 > @ComponentScan
 > class AppConfig {
->     @Bean
->     @Qualifier("z")
->     @Primary // 指定为主要 Bean, 在注入时如果没有指出 Bean 的名字, Spring 会注入标记有 @Primary 的 Bean
->     ZoneId createZoneOfZ() {
->         return ZoneId.of("Z");
->     }
+>  @Bean
+>  @Qualifier("z") // 等价于 @Bean(name = "z")
+>  @Primary // 指定为主要 Bean, 在注入时如果没有指出 Bean 的名字, Spring 会注入标记有 @Primary 的 Bean
+>  ZoneId createZoneOfZ() {
+>      return ZoneId.of("Z");
+>  }
 > 
->     @Bean
->     @Qualifier("utc8")
->     ZoneId createZoneOfUTC8() {
->         return ZoneId.of("UTC+08:00");
->     }
+>  @Bean
+>  @Qualifier("utc8")
+>  ZoneId createZoneOfUTC8() {
+>      return ZoneId.of("UTC+08:00");
+>  }
 > }
 > 
 > @Component
@@ -960,10 +960,15 @@ public class App {
 > 	@Autowired(required = false)
 > 	@Qualifier("z") // 指定注入名称为"z"的 ZoneId, 如果不使用这个注释就会默认查找且注入带有 @Primary 的 Bean 组件, 再没有就抛出异常
 > 	ZoneId zoneId = ZoneId.systemDefault();
->     ...
+>  ...
 > }
 > 
 > ```
+>
+> 因此可以使用 `@Component(name = "名字")` 或 `@Bean(name = "名字")` 设置名称，然后使用下面的两种方式来按名字注入。
+>
+> - `@Autowired` 默认按类型进行注入，如果搭配 `@Qualifier` 就会按名称进行注入
+> - `@Resource` 默认按照名字进行注入，如果没有指定(也就是没有填入 `name` 参数）就默认使用类型匹配（更方便）
 
 > [!IMPORTANT]
 >
@@ -1867,10 +1872,10 @@ public class App {
 >      public UserService$$EnhancerBySpringCGLIB extends UserService {
 >          UserService target;
 >          LoggingAspect aspect;
->          
+>              
 >          public UserService$$EnhancerBySpringCGLIB() {
 >          }
->          
+>              
 >          public ZoneId getZoneId() {
 >              aspect.doAccessCheck();
 >              return target.getZoneId();
@@ -2138,6 +2143,7 @@ jdbc.password=123456
 ```
 
 ```java
+// App.java
 package com.work;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -2147,9 +2153,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.*;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
@@ -2159,6 +2169,7 @@ import java.util.List;
 
 // 数据库连接池配置
 @Configuration
+@EnableTransactionManagement // 开启事务管理
 @PropertySource("classpath:jdbc.properties")
 class DataConfig {
     @Value("${jdbc.url}")
@@ -2188,6 +2199,11 @@ class DataConfig {
     JdbcTemplate createJdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
+
+    @Bean
+    PlatformTransactionManager createTxManager(@Autowired DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
+    }
 }
 
 // 用户实体类
@@ -2210,11 +2226,13 @@ class Student {
 
 // 用户服务类
 @Component
+// @Transactional 标识类内所有方法都开启事务
 class UserService {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
     // 查询单个用户
+    @Transactional // 开启事务
     public Student getStudentById(long id) {
         /* 链接实例自动创建
         return jdbcTemplate.execute((Connection conn) -> {
@@ -2259,6 +2277,7 @@ class UserService {
     }
 
     // 查询多个用户
+    @Transactional // 开启事务
     public List<Student> getStudentsByGender(long gender) {
         /* 如果需要返回多个记录可以使用 BeanPropertyRowMapper<>, 但是记录元素类型(这里是指 Student)需要实现无参构造方法, 但是有记忆负担, 因此我推荐下面的写法
         return jdbcTemplate.query("SELECT * FROM students WHERE gender = ?", new BeanPropertyRowMapper<>(Student.class), gender);
@@ -2275,9 +2294,10 @@ class UserService {
     }
 
     // 修改用户(更新)
+    @Transactional // 开启事务
     public void updateStudentIsMod(Long selectId, String rename) {
         // 传入SQL，SQL参数，返回更新的行数:
-        if (1 != jdbcTemplate.update("UPDATE students SET name = ? WHERE id = ?", rename, selectId)) {
+        if (1 != jdbcTemplate.update("UPDATE students SET name = ? WHERE id = ?", rename, selectId)) { // 可以把这个 1 改为 0 测试是否会发生事务回滚
             throw new RuntimeException("Student not found by id"); // 如果没有更新任何行则抛出异常
         }
         // else {
@@ -2355,6 +2375,54 @@ public class App {
 }
 
 ```
+
+> [!IMPORTANT]
+>
+> 补充：默认情况下，如果发生了 `RuntimeException`，`Spring` 的声明式事务将自动回滚。如果要针对 `Checked Exception` 回滚事务，需要在`@Transactional`注解中写出来。
+>
+> ```java
+> @Transactional(rollbackFor = {RuntimeException.class, IOException.class})
+> public buyProducts(long productId, int num) throws IOException {
+>     ...
+> }
+> ```
+>
+> 为了简化代码，我们强烈建议业务异常体系从 `RuntimeException` 派生，这样就不必声明任何特殊异常即可让 `Spring` 的声明式事务正常工作。
+
+> [!IMPORTANT]
+>
+> 补充：对于方法来说，使用 `@Transactional` 事务的开启和结束是非常明确的，就是函数体的花括号范围内。但是如果出现事务嵌套怎么办（两个方法都有事务，并且其中一个方法调用了另外一个方法）？要解决这种问题，就需要定义事务的传播模型。
+>
+> `Spring` 的声明式事务为事务传播定义了几个级别，默认传播级别就是 `REQUIRED`，它的意思是，如果当前没有事务，就创建一个新事务，如果当前有事务，就加入到当前事务中执行。
+>
+> ```java
+> @Transactional
+> User register(String email, String password, String name) {
+>     // 事务已开启:
+>     User user = jdbcTemplate.insert("...");
+>     // ???:
+>     bonusService.addBonus(user.id, 100);
+> } // 事务结束
+> 
+> 
+> @Controller
+> public class RegisterController {
+>     @Autowired
+>     UserService userService;
+> 
+>     @PostMapping("/register")
+>     public ModelAndView doRegister(HttpServletRequest req) {
+>         String email = req.getParameter("email");
+>         String password = req.getParameter("password");
+>         String name = req.getParameter("name");
+>         User user = userService.register(email, password, name);
+>         return ...
+>     }
+> }
+> 
+> ```
+>
+> 
 
 ### 3.2.代码实践
 

@@ -1951,7 +1951,7 @@ public interface StudentsMapper {
 >       ```java
 >       // @Results & @Result
 >       import org.apache.ibatis.annotations.*;
->                                               
+>                                                   
 >       public interface UserMapper {
 >           @Select("SELECT user_id, user_name FROM users WHERE id = #{id}")
 >           @Results({
@@ -1960,7 +1960,7 @@ public interface StudentsMapper {
 >           })
 >           User getUser(int id);
 >       }
->                                               
+>                                                   
 >       ```
 >
 >   *   **@One & @Many, 一对一/一对多关联查询**：解决一对一和一对多关系的数据查询。
@@ -1973,12 +1973,12 @@ public interface StudentsMapper {
 >       user_table_id             INT       用户的唯一 ID
 >       user_table_name	          VARCHAR	用户的姓名
 >       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
->                                               
+>                                                   
 >       departments 表包含以下字段:
 >       字段名	  类型	说明
 >       departments_table_id	  INT	    部门的唯一 ID
 >       departments_table_name    VARCHAR   部门的名称
->                                               
+>                                                   
 >       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
 >       想要获取完整的 Department 对象, 需要查 departments 表,
 >       并且假设 User Bean 实体和 Department Bean 实体长下面这样
@@ -1994,16 +1994,16 @@ public interface StudentsMapper {
 >           private List<User> users; // 该部门的用户列表
 >           // ...
 >       }
->                                               
+>                                                   
 >       并且已经编写好
 >       public interface DepartmentMapper {
 >           @Select("SELECT department_entity_id, department_entity_name FROM departments WHERE id = #{deptId}")
 >           Department getDepartment(int deptId);  // 根据 deptId 查询部门信息
 >       }
 >       */
->                                               
+>                                                   
 >       import org.apache.ibatis.annotations.*;
->                                               
+>                                                   
 >       public interface UserMapper {
 >           @Select("SELECT * FROM users WHERE user_table_id = #{id}") // 根据用户传递的参数填充 SQL 模板后查询得到所有符合 id 值的用户
 >           @Results({ // 但是执行结果中由于数据表字段和实体类字段不统一, 需要进行映射
@@ -2014,7 +2014,7 @@ public interface StudentsMapper {
 >           })
 >           User getUserWithDepartment(int id);
 >       }
->                                               
+>                                                   
 >       ```
 >       
 >       ```java
@@ -2025,12 +2025,12 @@ public interface StudentsMapper {
 >       user_table_id             INT       用户的唯一 ID
 >       user_table_name	          VARCHAR	用户的姓名
 >       use_table_dept_id	      INT	    外键，指向 departments 表的 id 字段
->                                               
+>                                                   
 >       departments 表包含以下字段:
 >       字段名	  类型	说明
 >       departments_table_id	  INT	    部门的唯一 ID
 >       departments_table_name    VARCHAR   部门的名称
->                                               
+>                                                   
 >       由于用户表 users 里只有 dept_id, 但没有完整的部门信息,
 >       想要获取完整的 Department 对象, 需要查 departments 表,
 >       并且假设 User Bean 实体和 Department Bean 实体长下面这样
@@ -2046,7 +2046,7 @@ public interface StudentsMapper {
 >           private List<User> users; // 该部门的用户列表
 >           // ...
 >       }
->                                               
+>                                                   
 >       并且已经编写好
 >       public interface UserMapper {
 >           @Select("SELECT user_table_id, user_table_name, use_table_dept_id FROM users WHERE use_table_dept_id = #{deptId}")
@@ -2056,9 +2056,9 @@ public interface StudentsMapper {
 >           })
 >           List<User> getUsersByDepartmentId(int deptId);
 >       }
->                                               
+>                                                   
 >       */
->                                               
+>                                                   
 >       public interface DepartmentMapper {
 >           @Select("SELECT departments_table_id, departments_table_name FROM departments WHERE departments_table_id = #{deptId}")
 >           @Results({
@@ -2069,7 +2069,7 @@ public interface StudentsMapper {
 >           })
 >           Department getDepartmentById(int deptId); // Department 中包含用户列表
 >       }
->                                               
+>                                                   
 >       ```
 >
 >   -   **@Param, 传递多个参数**：在 `SQL` 语句中传递多个参数时，避免 `#{arg0}`、`#{arg1}` 这种不直观的写法。
@@ -2113,14 +2113,14 @@ public interface StudentsMapper {
 >       ```java
 >       // @ResultMap
 >       import org.apache.ibatis.annotations.*;
->                                               
+>                                                   
 >       public interface UserMapper {
->                                               
+>                                                   
 >           // 定义查询语句，并引用已有的映射规则
 >           @Select("SELECT * FROM users WHERE id = #{id}")
 >           @ResultMap("userResultMap") // 引用已经定义好的映射规则
 >           User getUser(int id); // 返回一个 User 对象
->                                               
+>                                                   
 >           // 定义一个映射规则
 >           @Results(id = "userResultMap", value = {
 >               @Result(column = "id", property = "id"),
@@ -2128,7 +2128,7 @@ public interface StudentsMapper {
 >           })
 >           User getUserById(int id);
 >       }
->                                               
+>                                                   
 >       ```
 >
 >
@@ -3205,19 +3205,42 @@ server:
 ```
 
 ```java
-// ./src/main/java/com/work/workusercentre/WorkUserCentreApplication.java: 启动文件
+// ./src/main/java/com/work/workusercentre/WorkUserCentreApplication.java: 启动文件(测试一下)
 package com.work.workusercentre;
 
+import com.work.workusercentre.entity.<填入实体类名>;
+import com.work.workusercentre.mapper.<填入实体类名>Mapper;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+class MapperTest {
+    @Autowired
+    private <填入实体类名>Mapper aMapper;
+
+    public List<<填入实体类名>> getAllEntity() {
+        return aMapper.selectList(null);
+    }
+}
 
 @SpringBootApplication
 @MapperScan("com.work.workusercentre.mapper") // 启用 MyBatisPlus 扫描 ./src/Mapper/ 中的映射
 public class WorkUserCentreApplication {
     public static void main(String[] args) {
-        SpringApplication.run(WorkUserCentreApplication.class, args);
-        System.out.println("hello");
+        ApplicationContext context = (ApplicationContext) SpringApplication.run(WorkUserCentreApplication.class, args);
+
+        // 通过 Spring 获取 UserMapperTest 实例
+        MapperTest mapperTest = context.getBean(MapperTest.class);
+
+        // 获取所有用户并输出
+        var allUser = mapperTest.getAllEntity();
+        System.out.println("Total: " + allUser.size());
     }
 }
 
@@ -3225,7 +3248,7 @@ public class WorkUserCentreApplication {
 
 ### 3.2.代码实践
 
-
+待补充...
 
 
 

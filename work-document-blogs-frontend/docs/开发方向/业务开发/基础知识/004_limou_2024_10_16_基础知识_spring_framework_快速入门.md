@@ -25,6 +25,8 @@
 
 #### 3.1.1.控制反转
 
+##### 3.1.1.1.问题所在
+
 传统的应用程序中，控制权在程序本身，因此程序的控制流程完全由开发者控制。例如某些变量的创建需要开发者手动创建、配置后才能使用。
 
 ```java
@@ -92,6 +94,8 @@ public class HistoryServlet extends HttpServlet {
 -   **组件依赖困难**：随着更多的组件被引入，例如，书籍评论，需要共享的组件写起来会更困难，这些组件的依赖关系会越来越复杂。
 -   **组件测试困难**：测试某个组件，例如 `BookService`，是复杂的，因为必须要在真实的数据库环境下执行（写死代码）。
 
+##### 3.1.1.2.解决方案
+
 而如果有一个东西，可以：负责组件创建、负责组件共享、负责组件组装、负责组件销毁，就可以顺带解决组件依赖、组件测试。而这个东西就是 `IoC`，将传统的控制权反转，从应用程序转交给 `IoC` 容器。开发过程中不再需要手动 `new` 来实例，而是使用 `IoC` 容器进行依赖注入，从此关于组件的问题可以和核心代码动作进行分离。
 
 这里因为引入了 `IoC`，就会产生了几个新的事物：
@@ -102,13 +106,13 @@ public class HistoryServlet extends HttpServlet {
 
 正常来说，我们有两种依赖注入方法：
 
--   使用 `set()` 封装依赖注入，这也是最为常规的做法，只解决少量组件问题，但只有侵入（需要实现特定接口）
--   使用 `IoC` 这种无侵入容器，这连组件自己都不知道自己运行在容器中，测试不依赖容器，且无需侵入（不需实现特定接口）
+-   使用 `set()` 封装依赖注入，这也是最为常规的做法，只解决少量组件问题，但这是有侵入的（需要实现特定接口，使用 `set()` 的组件将会感知到侵入）
+-   使用 `IoC` 这种无侵入容器，这连组件自己都不知道自己运行在容器中，测试不依赖容器，且无需侵入（不需实现特定接口，使用 `IoC` 的组件不会感知到侵入）
 
-我们可以尝试装载一个 `Bean` 试试，直接使用 `Maven` 创建一个 `Java` 项目然后引入 `org.springframework:spring-context:6.0.0` 进行手动配置即可，不要使用 `spring initializr` 然后禁用自动化配置这种方式（太复杂还需要学习更多的东西）。
+我们可以尝试装载一个 `Bean` 试试，直接使用 `Maven` 创建一个 `Java` 项目然后引入 `org.springframework:spring-context:6.0.0` 进行手动配置即可，不要使用 `spring initializr` 然后禁用自动化配置这种方式。
 
 ```shell
-创建项目以及目录结构
+# 创建项目以及目录结构
 $ mvn archetype:generate \
 -DgroupId=com.work \
 -DartifactId=my-spring-framework-test \
@@ -422,7 +426,7 @@ public class App {
 把上述 `XML` 配置文件用 `Java` 代码写出来，就像这样：
 
 ```java
-// 核心等价代码
+// 等价核心代码
 UserService userService = new UserService();
 MailService mailService = new MailService();
 userService.setMailService(mailService);
@@ -1290,9 +1294,11 @@ public class App {
 
 #### 3.1.2.切面编程
 
+##### 3.1.2.1.问题所在
+
 `OOP` 作为面向对象编程的模式，获得了巨大的成功，`OOP` 的主要功能是数据封装、继承和多态。而 `AOP` 是一种新的编程方式，它和 `OOP` 不同，`OOP` 把系统看作多个对象的交互，`AOP` 把系统分解为不同的关注点，或者称之为切面。
 
-对于安全检查、日志、事务等代码，它们会重复出现在每个业务方法中。使用 `OOP`，我们很难将这些四处分散的代码模块化，哪怕模块化了也总有部分逻辑和业务无关。
+对于安全检查、日志、事务等代码，它们会重复出现在每个业务方法中。使用 `OOP`，我们很难将这些四处分散的代码模块化，哪怕模块化了也总有部分代码逻辑和实际的业务无关。
 
 ```java
 // BookServic.java
@@ -1365,12 +1371,12 @@ public class SecurityCheckBookService implements BookService {
 
     public void createBook(Book book) {
         securityCheck();
-        target.createBook(book);
+        target.createBook(book); // 把 createBook() 又封装了一层
     }
 
     public void updateBook(Book book) {
         securityCheck();
-        target.updateBook(book);
+        target.updateBook(book); // 把 updateBook() 又封装了一层
     }
 
     private void securityCheck() {
@@ -1380,7 +1386,9 @@ public class SecurityCheckBookService implements BookService {
 
 ```
 
-另一种方法是，既然`SecurityCheckBookService`的代码都是标准的 `Proxy` 样板代码，不如把查权、日志、事务视为切面。然后以某种自动化的方式，把切面织入到核心逻辑中，实现 `Proxy` 模式。
+另一种方法是，既然 `SecurityCheckBookService` 的代码都是标准的 `Proxy` 样板代码，不如把查权、日志、事务视为切面。然后以某种自动化的方式，把切面织入到核心逻辑中，实现 `Proxy` 模式。
+
+##### 3.1.2.2.解决方案
 
 如果我们以 `AOP` 的视角来编写上述业务，可以依次实现：
 
@@ -1499,6 +1507,7 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class MailService {
+    
     private ZoneId zoneId = ZoneId.systemDefault();
 
     public void setZoneId(ZoneId zoneId) {
@@ -1517,6 +1526,7 @@ public class MailService {
         System.err.printf("Welcome, %s!%n", user.getName());
 
     }
+    
 }
 
 ```
@@ -1595,7 +1605,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.stereotype.Component;
 
 @Component
-@Aspect
+@Aspect // 这个注解代表下面的类将会成为切面类
 class LoggingAspect {
     // 在执行 UserService 的每个方法前执行
     @Before("execution(public * com.work.service.UserService.*(..))")
@@ -1612,13 +1622,14 @@ class LoggingAspect {
         return retVal;
     }
 
-    // @AfterReturning 方法成功执行后执行
-    // @After 无论方法是否抛异常都会执行
-    // @AfterThrowing 方法抛异常后执行
+    // @Before 			方法执行前调用
+    // @After 			方法执行后调用(无论是否抛异常)
+    // @AfterReturning  方法成功执行后调用
+    // @AfterThrowing 	方法抛出异常后调用
 }
 
 @ComponentScan("com.work")
-@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy // 允许扫描切面
 class AppConfig {}
 
 public class App {
@@ -1639,35 +1650,36 @@ public class App {
         User loggedInUser = userService.login("john@example.com", "123456");
     }
 }
+
 ```
 
-`Spring` 容器启动时为我们自动创建的注入了作为 `Aspect` 的 `UserService` 类的子类 `UserServiceAopProxy`，它取代了原始的`UserService`。
+`Spring` 容器启动时为我们自动创建的注入了作为 `Aspect` 的 `UserService` 类的子类 `UserServiceAopProxy`，它取代了原始的 `UserService`。
 
 > [!IMPORTANT]
 >
-> 补充：我们在使用 `AOP` 时，要注意到虽然 `Spring` 容器可以把指定的方法通过 `AOP` 规则装配到指定的 `Bean` 的指定方法前后，但是，如果自动装配时，因为不恰当的范围，容易导致意想不到的结果，即很多不需要 `AOP` 代理的 `Bean` 也被自动代理了，并且，后续新增的 `Bean`，如果不清楚现有的 `AOP` 装配规则，容易被强迫装配。
+> 补充：我们在使用 `AOP` 时，要注意到虽然 `Spring` 容器可以把指定的方法通过 `AOP` 规则装配到指定的 `Bean` 的指定方法前后。但是，如果自动装配时，因为不恰当的范围，容易导致意想不到的结果，即很多不需要 `AOP` 代理的 `Bean` 也被自动代理了，并且，后续新增的 `Bean`，如果不清楚现有的 `AOP` 装配规则，容易被强迫装配。
 >
-> 使用 `AOP` 时，被装配的 `Bean` 最好自己能清清楚楚地知道自己被安排了。例如，`Spring` 自己提供另外一个`@Transactional`注解就是一个非常好的例子。如果我们自己写的 `Bean` 希望在一个数据库事务中被调用，就标注上`@Transactional`（标记方法标识该方法有事务，或者直接在 `class` 级别注解，表示“所有 `public` 方法都有事务），这样当事务内的任何 `SQL` 失败，已执行的 `SQL` 语句都会回滚回来，避免数据不一致，这样就不用每次都使用 `try-catch` 处理事务回滚。
+> 使用 `AOP` 时，被装配的 `Bean` 最好自己能清清楚楚地知道自己被安排了。例如，`Spring` 自己提供另外一个 `@Transactional` 注解就是一个非常好的例子。如果我们自己写的 `Bean` 希望在一个数据库事务中被调用，就标注上 `@Transactional`（标记方法标识该方法有事务，或者直接在 `class` 级别注解，表示“所有 `public` 方法都有事务），这样当事务内的任何 `SQL` 失败，已执行的 `SQL` 语句都会回滚回来，避免数据不一致，这样就不用每次都使用 `try-catch` 处理事务回滚。
 >
 > ```java
 > @Component
 > public class UserService {
->     // 有事务:
->     @Transactional
->     public User createUser(String name) {
->         ...
->     }
+>  // 有事务:
+>  @Transactional
+>  public User createUser(String name) {
+>      ...
+>  }
 > 
->     // 无事务:
->     public boolean isValidName(String name) {
->         ...
->     }
+>  // 无事务:
+>  public boolean isValidName(String name) {
+>      ...
+>  }
 > 
->     // 有事务:
->     @Transactional
->     public void updateUser(User user) {
->         ...
->     }
+>  // 有事务:
+>  @Transactional
+>  public void updateUser(User user) {
+>      ...
+>  }
 > }
 > ```
 >
@@ -1690,12 +1702,12 @@ public class App {
 > @Target(ElementType.METHOD) // 限定注解只能标注在方法上
 > @Retention(RetentionPolicy.RUNTIME) // 保留注解信息到运行时
 > @interface MetricTime {
->     String aValue(); // 指定要记录的指标名称(可选)
+>  String aValue(); // 指定要记录的指标名称(可选)
 > }
 > 
 > // 2. 实现注解
-> @Aspect
 > @Component
+> @Aspect
 > class MetricAspect {
 >     @Around("@annotation(metricTime)") // AOP 切面拦截 @MetricTime 注解的方法, metricTime 是注解实例
 >     public Object metric(ProceedingJoinPoint joinPoint, MetricTime metricTime) throws Throwable {
@@ -1709,12 +1721,12 @@ public class App {
 >             System.err.println("[Metrics] " + name + ": " + t + "ms");
 >         }
 >         /*
->         joinPoint.proceed(); 先被执行
->         目标方法的返回值会被计算并暂存, 但不会立刻返回
->         进入 finally 代码块, 执行 System.err.println("[Metrics] " + name + ": " + t + "ms");
->         finally 代码执行完毕后, 再真正返回 joinPoint.proceed(); 的结果
->         这是 finally 的特性
->         */
+>      joinPoint.proceed(); 先被执行
+>      目标方法的返回值会被计算并暂存, 但不会立刻返回
+>      进入 finally 代码块, 执行 System.err.println("[Metrics] " + name + ": " + t + "ms");
+>      finally 代码执行完毕后, 再真正返回 joinPoint.proceed(); 的结果
+>      这是 finally 的特性
+>      */
 >     }
 > }
 > 
@@ -1740,16 +1752,16 @@ public class App {
 > 
 > // 5. 启动容器
 > public class App {
->     public static void main(String[] args) {
->         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
->         UserService userService = context.getBean(UserService.class);
->         userService.register("test@example.com", "password", "John Doe");
->     }
+>  public static void main(String[] args) {
+>      ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+>      UserService userService = context.getBean(UserService.class);
+>      userService.register("test@example.com", "password", "John Doe");
+>  }
 > }
 > 
 > ```
 >
-> 常见的切面选择如下。
+> 而在使用了常见 `@Before、@After、@AfterReturning、@AfterThrowing` 选定时机后，可以在内部则取需要抓捕进行切入的对象。
 >
 > -  `@annotation(...)` - 注解匹配
 > -  `@execution(...)` - 方法执行匹配
@@ -1787,7 +1799,7 @@ public class App {
 >         return zoneId;
 >     }
 > 
->     public final ZoneId getFinalZoneId() {
+>     public final ZoneId getFinalZoneId() { // 注意这个方法加了一个 final
 >         return zoneId;
 >     }
 > }
@@ -1804,8 +1816,8 @@ public class App {
 >     }
 > }
 > 
-> @Aspect
 > @Component
+> @Aspect
 > class LoggingAspect {
 >     @Before("execution(public * com.work.UserService.*(..))")
 >     public void doAccessCheck() {
@@ -1818,11 +1830,11 @@ public class App {
 > class AppConfig {}
 > 
 > class App {
->     public static void main(String[] args) {
->         ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
->         MailService mailService = context.getBean(MailService.class);
->         System.out.println(mailService.sendMail());
->     }
+>  public static void main(String[] args) {
+>      ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
+>      MailService mailService = context.getBean(MailService.class);
+>      System.out.println(mailService.sendMail());
+>  }
 > }
 > 
 > ```
@@ -1837,14 +1849,14 @@ public class App {
 > 	at java.base/java.time.ZonedDateTime.now(ZonedDateTime.java:218)
 > 	at com.work.MailService.sendMail(App.java:38)
 > 	at com.work.App.main(App.java:60)
-> 	
+> 
 > ```
 >
-> 上面代码中，去掉 `@EnableAspectJAutoProxy` 也就是取消 `AOP` 扫描将不会出错，但是加上会出错，这是为什么呢？仔细跟踪代码，会发现`null`值出现在`MailService.sendMail()`内部的这一行代码，用`final`标注的成员变量为`null`？
+> 上面代码中，去掉 `@EnableAspectJAutoProxy` 也就是取消 `AOP` 扫描将不会出错，但是加上会出错，这是为什么呢？仔细跟踪代码，会发现 `null` 值出现在 `MailService.sendMail()` 内部的这一行代码，用 `final` 标注的成员变量为 `null`？
 >
-> 1. 正常创建一个`UserService`的原始实例，这是通过反射调用构造方法实现的，它的行为和我们预期的完全一致。
+> 1. 正常创建一个 `UserService` 的原始实例，这是通过反射调用构造方法实现的，它的行为和我们预期的完全一致。
 >
-> 2. 通过 `CGLIB` 创建一个 `UserService` 的子类，并引用了原始实例和 `LoggingAspect`，如果我们观察 `Spring` 创建的 `AOP` 代理，它的类名总是类似`UserService$$EnhancerBySpringCGLIB$$1c76af9d`（`Java` 的类名实际上允许`$`字符）。为了让调用方获得 `UserService` 的引用，它必须继承自 `UserService`。然后，该代理类会覆写所有 `public` 和 `protected` 方法，并在内部将调用委托给原始的 `UserService` 实例。
+> 2. 通过 `CGLIB` 创建一个 `UserService` 的子类，并引用了原始实例和 `LoggingAspect`，如果我们观察 `Spring` 创建的 `AOP` 代理，它的类名总是类似 `UserService$$EnhancerBySpringCGLIB$$1c76af9d`（`Java` 的类名实际上允许 `$` 字符）。为了让调用方获得 `UserService` 的引用，它必须继承自 `UserService`。然后，该代理类会覆写所有 `public` 和 `protected` 方法，并在内部将调用委托给原始的 `UserService` 实例。
 >
 >    ```java
 >    public UserService$$EnhancerBySpringCGLIB extends UserService {
@@ -1862,9 +1874,13 @@ public class App {
 >    
 >    ```
 >
+>    >   [!IMPORTANT]
+>    >
+>    >   补充：`CGLIB, Code Generation Library` 是一个 **开源的字节码生成库**，主要用于在运行时 **动态生成类**，实现方法拦截、代理增强等功能。在 **Spring AOP** 中，当 **被代理类没有实现接口** 时，`Spring` **默认使用 CGLIB 代理**，而不是 `JDK` 动态代理（`Spring AOP` 默认使用 `JDK` 动态代理）。
+>
 > 3. 如果开启了 `AOP`，用户获取 `Bean` 之前，就会出现两个 `UserService` 实例：
 >
->    - 第一个 `UserService` 实例是代码中定义的*原始实例*，它的成员变量已经按照我们预期的方式被初始化完成
+>    - 第一个 `UserService` 实例是代码中定义的原始实例，它的成员变量已经按照我们预期的方式被初始化完成
 >
 >    - 第二个 `UserService` 实例 `proxy` 实际上类型是 `UserService$$EnhancerBySpringCGLIB`，它引用了原始的 `UserService` 实例，用来做 `AOP` 注入时需要的调用
 >
@@ -1872,10 +1888,10 @@ public class App {
 >      public UserService$$EnhancerBySpringCGLIB extends UserService {
 >          UserService target;
 >          LoggingAspect aspect;
->              
+>      
 >          public UserService$$EnhancerBySpringCGLIB() {
 >          }
->              
+>      
 >          public ZoneId getZoneId() {
 >              aspect.doAccessCheck();
 >              return target.getZoneId();
@@ -1883,15 +1899,15 @@ public class App {
 >      }
 >      ```
 >
-> 4. 等到用户从 `ApplicationContext` 中获取的 `UserService` 时，此时的实例是 `proxy`，注入到 `MailService` 中的 `UserService` 实例也是 `proxy`，都是经过代理后的类
+> 4. 等到用户从 `ApplicationContext` 中获取的 `UserService` 时，此时的实例是 `proxy`，注入到 `MailService` 中的 `UserService` 实例也是 `proxy`，都是经过代理后的类（因此存在父子类关系，`UserService$$EnhancerBySpringCGLIB` 必须时继承而来的，不然无法返回给用户模块的时候让用户模块无法察觉到注入）。
 >
-> 5. 那么最终的问题来了 `proxy` 实例的成员变量，也就是从 `UserService` 继承的 `zoneId`，它的值是 `null`。在 `UserService` 中执行的 `public final ZoneId zoneId = ZoneId.systemDefault()` 初始化，在 `UserService$$EnhancerBySpringCGLIB` 中并未执行，因为没必要初始化 `proxy` 的成员变量，`proxy` 的目的是代理方法而无关属性。
+> 5. 那么最终的问题来了 `proxy` 实例的成员变量，也就是从 `UserService` 继承的 `zoneId`，它的值是 `null`。在 `UserService` 中执行的 `public final ZoneId zoneId = ZoneId.systemDefault()` 初始化，在 `UserService$$EnhancerBySpringCGLIB` 中并未执行，因为没必要初始化 `proxy` 的成员变量，`proxy` 的 **目的是代理方法而无关属性**。
 >
 > 6. 实际上，成员变量的初始化是在构造方法中完成的，和 `Cpp` 中使用初始化列表初始化有些类似。然而，对于 `Spring` 通过 `CGLIB` 动态创建的 `UserService$$EnhancerBySpringCGLIB `代理类的构造方法中，并未调用 `super()`。因此从父类继承的成员变量，包括 `final` 类型的成员变量，统统都没有初始化。
 >
-> 7. 尽管 `Java` 规定任何类的构造方法，第一行必须调用 `super()`，如果没有，编译器会自动加上，怎么 `Spring` 的 `CGLIB` 就可以搞特殊？这是因为自动加`super()`的功能是 `Java` 编译器实现的，它发现没加，就自动给加上，发现加错了，就报编译错误。但实际上，如果直接构造字节码，一个类的构造方法中，不一定非要调用 `super()`。`Spring` 使用 `CGLIB` 构造的 `Proxy` 类，是直接生成字节码，并没有源码-编译-字节码这个步骤，因此需要强调 `Spring` 通过 `CGLIB` 创建的代理类，不会初始化代理类自身继承的任何成员变量，包括 `final` 类型的成员变量！
+> 7. 尽管 `Java` 规定任何类的构造方法，第一行必须调用 `super()`，如果没有，编译器会自动加上，怎么 `Spring` 的 `CGLIB` 就可以搞特殊？这是因为自动加 `super()` 的功能是 `Java` 编译器实现的，它发现没加，就自动给加上，发现加错了，就报编译错误。但实际上，如果直接构造字节码，一个类的构造方法中，不一定非要调用 `super()`。`Spring` 使用 `CGLIB` 构造的 `Proxy` 类，是直接生成字节码，并没有源码-编译-字节码这个步骤，因此需要强调 `Spring` 通过 `CGLIB` 创建的代理类，不会初始化代理类自身继承的任何成员变量，包括 `final` 类型的成员变量！
 >
-> 8. 解决方法也简单，不要直接访问 `UserService$$EnhancerBySpringCGLIB` 继承过来的字段，而是使用方法来访问，方法内会先调用 `aspect.doAccessCheck();` 满足 `AOP` 再执行 `return target.getZoneId()` 就可以获取到 `UserService` 初始化的字段而不是继承来的字段
+> 8. 解决方法也简单，不要直接访问 `UserService$$EnhancerBySpringCGLIB` 继承过来的字段，而是使用方法来访问，方法内会先调用 `aspect.doAccessCheck();` 满足 `AOP` 后再执行 `return target.getZoneId()`，这个时候就可以获取到第一个 `UserService` 实例的字段而不是第二个实例继承来的字段。
 >
 > 9. 如果在 `MailService` 中，调用的不是 `getZoneId()`，而是 `getFinalZoneId()`，又会出现 `NullPointerException`，这是因为，代理类无法覆写 `final` 方法（这一点绕不过 `JVM` 的 `ClassLoader` 检查），该方法返回的其实就是是代理类继承下来的 `zoneId` 字段，即 `null`（无法覆盖的原因是 `Java` 的 `final` 关键字本身就是不希望父类的属性或方法被子类改动，只能被子类继承来使用）。
 >

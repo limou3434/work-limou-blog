@@ -1888,10 +1888,10 @@ public class App {
 >      public UserService$$EnhancerBySpringCGLIB extends UserService {
 >          UserService target;
 >          LoggingAspect aspect;
->      
+>          
 >          public UserService$$EnhancerBySpringCGLIB() {
 >          }
->      
+>          
 >          public ZoneId getZoneId() {
 >              aspect.doAccessCheck();
 >              return target.getZoneId();
@@ -1917,6 +1917,16 @@ public class App {
 > - 编写 `Bean` 时，如果可能会被代理，就不要编写 `public final` 方法，因为无法覆盖
 
 #### 3.1.3.访问数据
+
+##### 3.1.3.1.问题所在
+
+几乎所有的现代程序都需要访问数据，因此 `Spring` 也做了极大的努力。
+
+-   提供简化的访问 `JDBC` 的模板类 `jdbcTemplate`，不必手动释放资源，减少 `try-catch` 的使用，并且在获取链接后操作数据库的书写要规范和整洁许多。并且把 `SQLException` 封装为 `DataAccessException`，这个异常是一个 `RuntimeException`，并且让我们能区分 `SQL` 异常的原因，例如，`DuplicateKeyException` 表示违反了一个唯一约束。并且可以根据异常和事务注解快速回滚事务；
+-   提供了一个统一的 `DAO` 类以实现 `Data Access Object` 模式，也就是“数据访问对象”，可以更快屏蔽数据访问层，做到更快数据操作抽象。其核心类就是 `JdbcTemplate` 和 `JdbcDaoSupport`。因此 `Spring` 提供了 `JdbcDaoSupport` 来便于我们实现 `DAO` 模式，注意只是便于，不是直接提供了实现；
+-   能方便地集成 `JPA、Hibernate、MyBatis` 这些数据库访问框架；
+
+![image-20250326103239953](./assets/image-20250326103239953.png)
 
 到这里我们开启了 `IoC` 和 `AOP` 的大门，我们此时依靠这两个工具将大大简化我们的代码，我们先把我们之前使用 `JDBC` 的代码搬出来，然后用 `Spring Framework` 的方式来重写。
 
@@ -1975,7 +1985,11 @@ public class App {
 
 ```
 
-开始进行部分改写。
+可以看到我们需要使用 `HikariConfig` 进行配置，并且将配置传递给 `HikariDataSource` 实例，然后从中获取 `Connection` 实例。
+
+##### 3.1.3.2.解决方案
+
+接下来我们简化上述的核心代码。
 
 ```sql
 -- work-jdbc-test.sql
@@ -1991,12 +2005,12 @@ FLUSH PRIVILEGES;
 -- 创建表 students
 USE work_jdbc_test;
 CREATE TABLE students (
-                          id BIGINT AUTO_INCREMENT NOT NULL,
-                          name VARCHAR(50) NOT NULL,
-                          gender TINYINT(1) NOT NULL,
-                          grade INT NOT NULL,
-                          score INT NOT NULL,
-                          PRIMARY KEY(id)
+    id BIGINT AUTO_INCREMENT NOT NULL,
+    name VARCHAR(50) NOT NULL,
+    gender TINYINT(1) NOT NULL,
+    grade INT NOT NULL,
+    score INT NOT NULL,
+    PRIMARY KEY(id)
 ) Engine=INNODB DEFAULT CHARSET=UTF8;
 
 -- 插入初始数据
@@ -2156,6 +2170,7 @@ INSERT INTO students (name, gender, grade, score) VALUES ('小贝', 0, 3, 77);
 jdbc.url=jdbc:mysql://localhost:3306/work_jdbc_test
 jdbc.username=limou
 jdbc.password=123456
+
 ```
 
 ```java
@@ -2185,7 +2200,6 @@ import java.util.List;
 
 // 数据库连接池配置
 @Configuration
-@EnableTransactionManagement // 开启事务管理
 @PropertySource("classpath:jdbc.properties")
 class DataConfig {
     @Value("${jdbc.url}")
@@ -2197,6 +2211,7 @@ class DataConfig {
     @Value("${jdbc.password}")
     private String jdbcPassword;
 
+    // 创建 HikariDataSource Bean
     @Bean
     DataSource createDataSource() {
         HikariConfig config = new HikariConfig();
@@ -2211,14 +2226,19 @@ class DataConfig {
         return new HikariDataSource(config);
     }
 
+    // 创建 JdbcTemplate 实例, 不再需要创建链接
     @Bean
     JdbcTemplate createJdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 
+    // 手动创建事务管理器
     @Bean
     PlatformTransactionManager createTxManager(@Autowired DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
+        // 另外一个 @EnableTransactionManagement 注解也可以开启事务管理(自动), 并且更加通用, 上面的手动方式仅适合 JDBC 的事务管理器, 不适用于 JPA、JTA 的事务管理器
+        // 不过无论是手动还是自动, 一旦启动就可以使用注解 @Transactional 标识类内所有方法或指定方法开启事务
+        // 为什么使用 PlatformTransactionManager 作为事务管理器而不直接使用 TransactionStatus 呢? 因为 Spring 考虑了多种事务, 包括 分布式事务 JTA, 为了同时支持 JDBC 事务和 JTA 事务, 就抽象了 PlatformTransactionManager
     }
 }
 
@@ -2242,7 +2262,7 @@ class Student {
 
 // 用户服务类
 @Component
-// @Transactional 标识类内所有方法都开启事务
+// @Transactional 加到这里开启事务就会让所有的类内方法都开启事务
 class UserService {
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -2250,6 +2270,7 @@ class UserService {
     // 查询单个用户
     @Transactional // 开启事务
     public Student getStudentById(long id) {
+        // jdbcTemplate.execute 提供了 JDBC 的 Connection 供我们使用
         /* 链接实例自动创建
         return jdbcTemplate.execute((Connection conn) -> {
             try (PreparedStatement ps = conn.prepareStatement("SELECT * FROM students WHERE id = ?")) {
@@ -2392,9 +2413,13 @@ public class App {
 
 ```
 
+>   [!IMPORTANT]
+>
+>   补充：实际上，`Transactional` 可以不用注解的方式，而是使用手动生命实例的方式，不过这种不常用...
+
 > [!IMPORTANT]
 >
-> 补充：默认情况下，如果发生了 `RuntimeException`，`Spring` 的声明式事务将自动回滚。如果要针对 `Checked Exception` 回滚事务，需要在`@Transactional`注解中写出来。
+> 补充：默认情况下，如果发生了 `RuntimeException`，`Spring` 的声明式事务将自动回滚。如果要针对 `Checked Exception` 回滚事务，需要在 `@Transactional` 注解中写出来。
 >
 > ```java
 > @Transactional(rollbackFor = {RuntimeException.class, IOException.class})
@@ -2407,38 +2432,224 @@ public class App {
 
 > [!IMPORTANT]
 >
-> 补充：对于方法来说，使用 `@Transactional` 事务的开启和结束是非常明确的，就是函数体的花括号范围内。但是如果出现事务嵌套怎么办（两个方法都有事务，并且其中一个方法调用了另外一个方法）？要解决这种问题，就需要定义事务的传播模型。
+> 补充：对于方法来说，使用 `@Transactional` 事务的开启和结束是非常明确的（即所谓的“事务边界”），就是函数体的花括号范围内。但是如果出现事务嵌套怎么办（两个方法都有事务，并且其中一个方法调用了另外一个方法）？要解决这种问题，就需要定义事务的传播模型。
 >
-> `Spring` 的声明式事务为事务传播定义了几个级别，默认传播级别就是 `REQUIRED`，它的意思是，如果当前没有事务，就创建一个新事务，如果当前有事务，就加入到当前事务中执行。
+> `Spring` 的声明式事务为事务传播定义了几个级别，默认传播级别就是 `REQUIRED`，它的意思是，如果当前没有事务，就创建一个新事务，如果当前有事务，就加入到当前事务中执行。除此以外还有一些其他的级别：
 >
-> ```java
-> @Transactional
-> User register(String email, String password, String name) {
->     // 事务已开启:
->     User user = jdbcTemplate.insert("...");
->     // ???:
->     bonusService.addBonus(user.id, 100);
-> } // 事务结束
-> 
-> 
-> @Controller
-> public class RegisterController {
->     @Autowired
->     UserService userService;
-> 
->     @PostMapping("/register")
->     public ModelAndView doRegister(HttpServletRequest req) {
->         String email = req.getParameter("email");
->         String password = req.getParameter("password");
->         String name = req.getParameter("name");
->         User user = userService.register(email, password, name);
->         return ...
->     }
-> }
-> 
-> ```
+> -   `SUPPORTS`：表示如果有事务，就加入到当前事务，如果没有，那也不开启事务执行。这种传播级别可用于查询方法，因为 `SELECT` 语句既可以在事务内执行，也可以不需要事务；
+> -   `MANDATORY`：表示必须要存在当前事务并加入执行，否则将抛出异常。这种传播级别可用于核心更新逻辑，比如用户余额变更，它总是被其他事务方法调用，不能直接由非事务方法调用；
+> -   `REQUIRES_NEW`：表示不管当前有没有事务，都必须开启一个新的事务执行。如果当前已经有事务，那么当前事务会挂起，等新事务完成后，再恢复执行；
+>    -   `NOT_SUPPORTED`：表示不支持事务，如果当前有事务，那么当前事务会挂起，等这个方法执行完成后，再恢复执行；
+>    -   `NEVER`：和 `NOT_SUPPORTED` 相比，它不但不支持事务，而且在监测到当前有事务时，会抛出异常拒绝执行；
+>    -   `NESTED`：表示如果当前有事务，则开启一个嵌套级别事务，如果当前没有事务，则开启一个新事务。
+>    
+> 使用时类似 `@Transactional(propagation = Propagation.REQUIRES_NEW)` 这样调整不同的级别。
+
+>   [!IMPORTANT]
 >
-> 
+>   补充：`Spring` 是怎么发现事务的呢？首先事务是使用了 `JDBC` 实现，因此在引入 `JDBC` 的时候，就说明 `Spring` 的事务也是采用了 `JDBC` 来实现的。
+>
+>   首先我们需要知道核心的 `JDBC` 事务写法：
+>
+>   ```java
+>   Connection conn = openConnection();
+>   try {
+>       // 关闭自动提交:
+>       conn.setAutoCommit(false);
+>       // 执行多条SQL语句:
+>       insert(); update(); delete();
+>       // 提交事务:
+>       conn.commit();
+>   } catch (SQLException e) {
+>       // 回滚事务:
+>       conn.rollback();
+>   } finally {
+>       conn.setAutoCommit(true);
+>       conn.close();
+>   }
+>   
+>   ```
+>
+>   一个事务方法，是如何知道当前是否有事务？答案是使用了 `ThreadLocal`，也就是说 `Spring` 总是把和 `JDBC` 相关的会话链接 `Connection` 和事务实例 `Transactional` 绑定到 `ThreadLocal` 中。因此事务传播的前提是方法调用在一个线程内才可以，因此下面的代码将会创建两个完全独立的事务而不会合并到一起。
+>
+>   ```java
+>   @Transactional
+>   public User register(String email, String password, String name) { // BEGIN TX-A
+>       User user = jdbcTemplate.insert("...");
+>       new Thread(() -> {
+>           // BEGIN TX-B:
+>           bonusService.addBonus(user.id, 100);
+>           // END TX-B
+>       }).start();
+>   } // END TX-A
+>   
+>   ```
+
+还有一个重要的解决方案就是关于 `DAO` 层的简化，实际上我们有了 `JdbcTemplate` 后，实现一个自己的 `DAO` 层很简单，核心代码如下：
+
+```java
+public class UserDao {
+
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    User getById(long id) {
+        ...
+    }
+
+    List<User> getUsers(int page) {
+        ...
+    }
+
+    User createUser(User user) {
+        ...
+    }
+
+    User updateUser(User user) {
+        ...
+    }
+
+    void deleteUser(User user) {
+        ...
+    }
+}
+
+```
+
+不过由于 `Spring` 提供了 `JdbcDaoSupport` 类，就不用我们关心 `JdbcTemplate` 的具体注入。但其实只是使用者不用关心，我们自己还是续要注入的，使用 `JdbcTemplate` 只不过让 `DAO` 层的开发更加规范一些，`JdbcDapSupport` 内部的核心内容如下：
+
+```java
+public abstract class JdbcDaoSupport extends DaoSupport {
+
+    private JdbcTemplate jdbcTemplate;
+
+    public final void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+        initTemplateConfig();
+    }
+
+    public final JdbcTemplate getJdbcTemplate() {
+        return this.jdbcTemplate;
+    }
+
+    ...
+}
+
+```
+
+为什么 `Spring` 不自己注入 `JdbcTemplate` 呢？因为 `JdbcTemplate` 依赖 `DataSource` 进行初始化，`Spring` 无法确定用户的 `JDBC` 操作的是哪一种数据库方案，因此就只能提供方法让用户自己设置一个 `JdbcTemplate` 于 `JdbcDaoSupport` 中，一般会像下面这样使用。
+
+```java
+public abstract class AbstractDao extends JdbcDaoSupport {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @PostConstruct // 该注解使其在依赖注入完成后自动执行，通常用于初始化操作
+    public void init() {
+        super.setJdbcTemplate(jdbcTemplate); // 这里就是注入 jdbcTemplate 依赖后就自动把父类中的 JdbcTemplate 给设置好
+    }
+}
+
+@Component
+@Transactional
+public class UserDao extends AbstractDao {
+    public User getById(long id) {
+        return getJdbcTemplate().queryForObject(
+                "SELECT * FROM users WHERE id = ?",
+                new BeanPropertyRowMapper<>(User.class),
+                id
+        );
+    }
+    ...
+}
+
+```
+
+稍微实践一下如下。
+
+```java
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.support.JdbcDaoSupport;
+import org.springframework.stereotype.Repository;
+import javax.annotation.PostConstruct;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.List;
+
+// 统一封装 JdbcDaoSupport，简化 JdbcTemplate 访问
+public abstract class AbstractDao extends JdbcDaoSupport {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @PostConstruct
+    public void init() {
+        super.setJdbcTemplate(jdbcTemplate);
+    }
+
+    // 提供便捷方法，避免每次 getJdbcTemplate()
+    protected JdbcTemplate jdbc() {
+        return getJdbcTemplate();
+    }
+}
+
+// UserDao 继承 AbstractDao，无需再手动注入 JdbcTemplate
+@Repository
+class UserDao extends AbstractDao {
+
+    // 查询所有用户
+    public List<User> getAllUsers() {
+        return jdbc().query("SELECT id, name, age FROM users", new UserRowMapper());
+    }
+
+    // 查询单个用户
+    public User getUserById(int id) {
+        return jdbc().queryForObject("SELECT id, name, age FROM users WHERE id = ?",
+                new Object[]{id}, new UserRowMapper());
+    }
+
+    // 插入用户
+    public void addUser(String name, int age) {
+        jdbc().update("INSERT INTO users (name, age) VALUES (?, ?)", name, age);
+    }
+
+    // 删除用户
+    public void deleteUser(int id) {
+        jdbc().update("DELETE FROM users WHERE id = ?", id);
+    }
+}
+
+// 用户对象映射
+class UserRowMapper implements RowMapper<User> {
+    @Override
+    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new User(rs.getInt("id"), rs.getString("name"), rs.getInt("age"));
+    }
+}
+
+// 用户实体类
+class User {
+    int id;
+    String name;
+    int age;
+
+    public User(int id, String name, int age) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "User{id=" + id + ", name='" + name + "', age=" + age + "}";
+    }
+}
+
+```
+
+
 
 ### 3.2.代码实践
 

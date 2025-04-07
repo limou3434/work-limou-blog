@@ -1888,10 +1888,10 @@ public class App {
 >      public UserService$$EnhancerBySpringCGLIB extends UserService {
 >          UserService target;
 >          LoggingAspect aspect;
->          
+>              
 >          public UserService$$EnhancerBySpringCGLIB() {
 >          }
->          
+>              
 >          public ZoneId getZoneId() {
 >              aspect.doAccessCheck();
 >              return target.getZoneId();
@@ -1922,8 +1922,8 @@ public class App {
 
 几乎所有的现代程序都需要访问数据，因此 `Spring` 也做了极大的努力。
 
--   提供简化的访问 `JDBC` 的模板类 `jdbcTemplate`，不必手动释放资源，减少 `try-catch` 的使用，并且在获取链接后操作数据库的书写要规范和整洁许多。并且把 `SQLException` 封装为 `DataAccessException`，这个异常是一个 `RuntimeException`，并且让我们能区分 `SQL` 异常的原因，例如，`DuplicateKeyException` 表示违反了一个唯一约束。并且可以根据异常和事务注解快速回滚事务；
--   提供了一个统一的 `DAO` 类以实现 `Data Access Object` 模式，也就是“数据访问对象”，可以更快屏蔽数据访问层，做到更快数据操作抽象。其核心类就是 `JdbcTemplate` 和 `JdbcDaoSupport`。因此 `Spring` 提供了 `JdbcDaoSupport` 来便于我们实现 `DAO` 模式，注意只是便于，不是直接提供了实现；
+-   提供简化的访问 `JDBC` 的模板类 `JdbcTemplate`，不必手动释放资源，减少 `try-catch` 的使用，并且在获取链接后操作数据库的书写要规范和整洁许多。并且把 `SQLException` 封装为 `DataAccessException`，这个异常是一个 `RuntimeException`，并且让我们能区分 `SQL` 异常的原因，例如，`DuplicateKeyException` 表示违反了一个唯一约束。并且可以根据异常和事务注解快速回滚事务；
+-   提供了一个统一的 `DAO` 类以实现 `Data Access Object` 模式，也就是“数据访问对象”，可以更快屏蔽数据访问层，做到更快数据操作抽象。其核心类就是 `JdbcTemplate` 和 `JdbcDaoSupport`。因此 `Spring` 提供了 `JdbcDaoSupport` 来便于我们实现 `DAO` 模式，注意只是“便于”，不是直接提供了实现；
 -   能方便地集成 `JPA、Hibernate、MyBatis` 这些数据库访问框架；
 
 ![image-20250326103239953](./assets/image-20250326103239953.png)
@@ -1988,6 +1988,8 @@ public class App {
 可以看到我们需要使用 `HikariConfig` 进行配置，并且将配置传递给 `HikariDataSource` 实例，然后从中获取 `Connection` 实例。
 
 ##### 3.1.3.2.解决方案
+
+###### 3.1.3.2.1.简化操作数据持久
 
 接下来我们简化上述的核心代码。
 
@@ -2304,13 +2306,17 @@ class UserService {
         */
 
         /* 链接实例直接去掉, 语句实例直接去掉, 返回集合自动创建  */
-        return jdbcTemplate.queryForObject("SELECT * FROM students WHERE id = ?", (ResultSet rs, int rowNum) -> {
-            System.out.println("Processing row: " + rowNum);
-            return new Student(
-                    rs.getLong("id"),
-                    rs.getString("name")
-            );
-        }, id);
+        return jdbcTemplate.queryForObject(
+            "SELECT * FROM students WHERE id = ?",
+            (ResultSet rs, int rowNum) -> {
+                System.out.println("Processing row: " + rowNum);
+                return new Student(
+                        rs.getLong("id"),
+                        rs.getString("name")
+                );
+            },
+            id
+        );
     }
 
     // 查询多个用户
@@ -2324,8 +2330,8 @@ class UserService {
         return jdbcTemplate.query("SELECT * FROM students WHERE gender = ?", (ResultSet rs, int rowNum) -> {
             System.out.println("Processing row: " + rowNum);
             return new Student(
-                    rs.getLong("id"),
-                    rs.getString("name")
+                rs.getLong("id"),
+                rs.getString("name")
             );
         }, gender);
     }
@@ -2416,38 +2422,32 @@ public class App {
 >   [!IMPORTANT]
 >
 >   补充：实际上，`Transactional` 可以不用注解的方式，而是使用手动生命实例的方式，不过这种不常用...
-
-> [!IMPORTANT]
 >
-> 补充：默认情况下，如果发生了 `RuntimeException`，`Spring` 的声明式事务将自动回滚。如果要针对 `Checked Exception` 回滚事务，需要在 `@Transactional` 注解中写出来。
+>   默认情况下，如果发生了 `RuntimeException`，`Spring` 的声明式事务将自动回滚。如果要针对 `Checked Exception` 回滚事务，需要在 `@Transactional` 注解中写出来。
 >
-> ```java
-> @Transactional(rollbackFor = {RuntimeException.class, IOException.class})
-> public buyProducts(long productId, int num) throws IOException {
->     ...
-> }
-> ```
+>   ```java
+>   @Transactional(rollbackFor = {RuntimeException.class, IOException.class})
+>   public buyProducts(long productId, int num) throws IOException {
+>    ...
+>   }
+>   ```
 >
-> 为了简化代码，我们强烈建议业务异常体系从 `RuntimeException` 派生，这样就不必声明任何特殊异常即可让 `Spring` 的声明式事务正常工作。
-
-> [!IMPORTANT]
+>   为了简化代码，我们强烈建议业务异常体系从 `RuntimeException` 派生，这样就不必声明任何特殊异常即可让 `Spring` 的声明式事务正常工作。
 >
-> 补充：对于方法来说，使用 `@Transactional` 事务的开启和结束是非常明确的（即所谓的“事务边界”），就是函数体的花括号范围内。但是如果出现事务嵌套怎么办（两个方法都有事务，并且其中一个方法调用了另外一个方法）？要解决这种问题，就需要定义事务的传播模型。
+>   对于方法来说，使用 `@Transactional` 事务的开启和结束是非常明确的（即所谓的“事务边界”），就是函数体的花括号范围内。但是如果出现事务嵌套怎么办（两个方法都有事务，并且其中一个方法调用了另外一个方法）？要解决这种问题，就需要定义事务的传播模型。
 >
-> `Spring` 的声明式事务为事务传播定义了几个级别，默认传播级别就是 `REQUIRED`，它的意思是，如果当前没有事务，就创建一个新事务，如果当前有事务，就加入到当前事务中执行。除此以外还有一些其他的级别：
+>   `Spring` 的声明式事务为事务传播定义了几个级别，默认传播级别就是 `REQUIRED`，它的意思是，如果当前没有事务，就创建一个新事务，如果当前有事务，就加入到当前事务中执行。除此以外还有一些其他的级别：
 >
 > -   `SUPPORTS`：表示如果有事务，就加入到当前事务，如果没有，那也不开启事务执行。这种传播级别可用于查询方法，因为 `SELECT` 语句既可以在事务内执行，也可以不需要事务；
-> -   `MANDATORY`：表示必须要存在当前事务并加入执行，否则将抛出异常。这种传播级别可用于核心更新逻辑，比如用户余额变更，它总是被其他事务方法调用，不能直接由非事务方法调用；
+>-   `MANDATORY`：表示必须要存在当前事务并加入执行，否则将抛出异常。这种传播级别可用于核心更新逻辑，比如用户余额变更，它总是被其他事务方法调用，不能直接由非事务方法调用；
 > -   `REQUIRES_NEW`：表示不管当前有没有事务，都必须开启一个新的事务执行。如果当前已经有事务，那么当前事务会挂起，等新事务完成后，再恢复执行；
->    -   `NOT_SUPPORTED`：表示不支持事务，如果当前有事务，那么当前事务会挂起，等这个方法执行完成后，再恢复执行；
+>   -   `NOT_SUPPORTED`：表示不支持事务，如果当前有事务，那么当前事务会挂起，等这个方法执行完成后，再恢复执行；
 >    -   `NEVER`：和 `NOT_SUPPORTED` 相比，它不但不支持事务，而且在监测到当前有事务时，会抛出异常拒绝执行；
->    -   `NESTED`：表示如果当前有事务，则开启一个嵌套级别事务，如果当前没有事务，则开启一个新事务。
->    
-> 使用时类似 `@Transactional(propagation = Propagation.REQUIRES_NEW)` 这样调整不同的级别。
-
->   [!IMPORTANT]
+>   -   `NESTED`：表示如果当前有事务，则开启一个嵌套级别事务，如果当前没有事务，则开启一个新事务。
+> 
+>   使用时类似 `@Transactional(propagation = Propagation.REQUIRES_NEW)` 这样调整不同的级别。
 >
->   补充：`Spring` 是怎么发现事务的呢？首先事务是使用了 `JDBC` 实现，因此在引入 `JDBC` 的时候，就说明 `Spring` 的事务也是采用了 `JDBC` 来实现的。
+>  `Spring` 是怎么发现事务的呢？首先事务是使用了 `JDBC` 实现，因此在引入 `JDBC` 的时候，就说明 `Spring` 的事务也是采用了 `JDBC` 来实现的。
 >
 >   首先我们需要知道核心的 `JDBC` 事务写法：
 >
@@ -2484,6 +2484,8 @@ public class App {
 >   } // END TX-A
 >   
 >   ```
+
+###### 3.1.3.2.2.便于数据访问对象
 
 还有一个重要的解决方案就是关于 `DAO` 层的简化，实际上我们有了 `JdbcTemplate` 后，实现一个自己的 `DAO` 层很简单，核心代码如下：
 
@@ -2578,6 +2580,34 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+// 用户实体类
+class User {
+    int id;
+    String name;
+    int age;
+
+    public User(int id, String name, int age) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "User{id=" + id + ", name='" + name + "', age=" + age + "}";
+    }
+}
+
+// 用户对象映射
+class UserRowMapper implements RowMapper<User> {
+    @Override
+    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+        return new User(rs.getInt("id"), rs.getString("name"), rs.getInt("age"));
+    }
+}
+
+// 省略配置过程...
+
 // 统一封装 JdbcDaoSupport，简化 JdbcTemplate 访问
 public abstract class AbstractDao extends JdbcDaoSupport {
 
@@ -2621,35 +2651,21 @@ class UserDao extends AbstractDao {
     }
 }
 
-// 用户对象映射
-class UserRowMapper implements RowMapper<User> {
-    @Override
-    public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new User(rs.getInt("id"), rs.getString("name"), rs.getInt("age"));
-    }
-}
-
-// 用户实体类
-class User {
-    int id;
-    String name;
-    int age;
-
-    public User(int id, String name, int age) {
-        this.id = id;
-        this.name = name;
-        this.age = age;
-    }
-
-    @Override
-    public String toString() {
-        return "User{id=" + id + ", name='" + name + "', age=" + age + "}";
-    }
-}
-
 ```
 
+###### 3.1.3.2.3.集成实体映射框架
 
+在使用 `JdbcTemplate` 的时候，我们用得最多的方法就是 `List<T> query(String, RowMapper, Object...)` 这一类查询的方法。如果我们没有传入实体类，就需要我们自己进行手动映射，把处理好的 `RowMapper` 传入进去。这个 `RowMapper` 参数的的作用就是把 `ResultSet` 的一行记录映射为 `Java Bean`。不过有些框架可以帮我们做到这类事情。
+
+>   [!IMPORTANT]
+>
+>   补充：稍微整理一下。
+>
+>   -   数据实体层：描述数据对象 `Entity`
+>   -   数据映射层：操作数据源头 `JdbcTemplate、RowMapper、JdbcDaoSupport`
+>   -   持久访问层：屏蔽操作后的封装服务 `Service`
+
+映射层这里主要有几个框架，主要就是 `Hibernate` 和 `MyBatis`，而这两个框架直接看文档即可，并且在现代的编码过程中都是直接接入到 `Spring Boot` 中的，并不推荐直接原生使用。
 
 ### 3.2.代码实践
 

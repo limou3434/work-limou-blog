@@ -41,7 +41,7 @@
 
 ## 3.Spring Boot 使用教程
 
-### 3.1.第一次编写 Spring Boot 项目
+### 3.1.首次编写
 
 > [!WARNING]
 >
@@ -64,7 +64,7 @@
 9. 点击 “生成” 按钮，下载 `zip` 文件，然后将其解压缩到计算机上的文件夹中
 10. 此时浏览器可以从远端下载到您配置好的 `Spring Boot` 项目脚手架代码
 
-### 3.2.目录结构
+#### 3.1.2.目录结构
 
 下面就是一个 `Spring Boot` 生成的目录结构，相关注释我都写在里面了。
 
@@ -102,7 +102,7 @@ demo
 >
 > 补充：`Maven` 有什么用呢？主要是 `Java` 项目的构建工具，类似 `C++` 中的 `CMake` 工具，但是使用起来会稍微简单一些，可以简化和自动化软件的构建、测试、部署、依赖流程。
 
-### 3.3.代码实践
+#### 3.1.3.代码实践
 
 我们将依据 [官方快速入门文档](https://spring.io/quickstart) 在 `Spring Boot` 项目运行打印出 `Hello World`。
 
@@ -204,13 +204,7 @@ $ ./mvnw spring-boot:run
 >
 > 补充：当然仅仅是这样是不够的，为什么，因为这样仅仅是写好了一个后端接口而已，`cpp-http` 可以做到、`python-flask、python-django` 可以做到、`node.js-koa.js` 可以做到，为什么偏偏工业偏爱使用 `java-spring boot` 呢？因此您需要了解更多关于 `Spring Boot` 的配置内容。
 
-
-
-
-
-
-
-# Spring Boot 基础知识
+### 3.2.再次编写
 
 根据常见的服务器开发，这里给出一份关于 `Spring Boot` 的总文档，旨在让您只看一遍就知道如何编写一个完整的 `Web` 服务器。
 
@@ -221,17 +215,15 @@ $ ./mvnw spring-boot:run
 - [Spring Boot 接口文档](https://docs.spring.io/spring-boot/api/java/index.html)
 - [构建 RESTful Web 服务](https://spring.io/guides/gs/rest-service) 和 [使用 RESTful Web 服务](https://spring.io/guides/gs/consuming-rest) 
 
-## 1.RESTful Web 服务
-
 这里将先根据 [构建 RESTful Web 服务](https://spring.io/guides/gs/rest-service) 和 [使用 RESTful Web 服务](https://spring.io/guides/gs/consuming-rest) 这两份官方文档、其他官方文档、我个人的见解来讲述如何完整编写 `RESTful Web` 规范的 `Web` 服务器。
 
-### 1.1.编码目标
+#### 3.2.1.编码目标
 
 - 我们将实现一个 `Web` 服务器
 - 构建常见的 `HTTP` 请求、
 - 需要自定义返回的 `JSON` 格式
 
-### 1.2.创建项目
+#### 3.2.2.创建项目
 
 这次我们不再使用 `Spring Initializr` 来创建 `Spring Boot` 项目了，而使用著名的 `IDEA` 编辑器来构建一个 `Spring Boot` 项目。
 
@@ -249,15 +241,9 @@ $ ./mvnw spring-boot:run
 
 可以看到在终端中，`Spring boot` 成功被启动起来了。
 
-### 1.3.简单使用
+#### 3.2.3.简单使用
 
 由于我们需要自定义返回的 `JSON` 字符串，因此需要使用一些 `Resource Representation` 来进行数据建模（就是下面定义的 `Greeting`）。
-
-::: details 简单使用
-
-::: tabs
-
-@tab 项目结构
 
 ```shell
 # 项目文件结构
@@ -284,8 +270,6 @@ my-restful-web
 
 ```
 
-@tab 资源表示
-
 ``` java
 // Greeting.java: 资源表示
 package com.limou.myrestfulweb;
@@ -305,8 +289,6 @@ public record Greeting(long id, String content) {
  */
 }
 ```
-
-@tab 资源控制
 
 ```java
 // GreetingController.java: 资源控制
@@ -350,8 +332,6 @@ public class GreetingController {
 }
 ```
 
-@tab 启动文件
-
 ```java
 // MyRestfulWebApplicationTests.java: 启动文件
 // 注意无需进行任何改动!
@@ -376,8 +356,6 @@ public class MyRestfulWebApplication {
 
 ```
 
-:::
-
 > [!IMPORTANT]
 >
 > 补充：`Jackson JSON` 库将 `Greeting` 类型的实例自动封送到 `JSON` 中。默认情况下，`Jackson` 由 `Web` 启动器包含。
@@ -390,15 +368,9 @@ public class MyRestfulWebApplication {
 
 ![](assets/image.png)
 
-### 1.4.高自定义
+#### 3.2.4.高自定义
 
 如果您对 `HTTP` 协议足够熟悉，您一定会像如何高自定义化网络报文的，因此下面给出了一个稍微现代化的写法供您参考，为节省一些说明，我把文件稍微精简了一些...
-
-::: details 高自定义
-
-::: tabs
-
-@tab 项目结构
 
 ```shell
 # 项目结构
@@ -425,8 +397,6 @@ my-restful-web
 ...
 
 ```
-
-@tab 资源控制
 
 ```java
 // GreetingController.java: 资源控制
@@ -563,8 +533,6 @@ public class GreetingController {
 
 ```
 
-@tab 前端页面
-
 ```html
 <!-- test.html: 前端页面 -->
 <!DOCTYPE html>
@@ -616,8 +584,6 @@ public class GreetingController {
 </html>
 ```
 
-@tab 配置文件
-
 ```shell
 # application.properties: 配置文件
 spring.application.name=my-restful-web
@@ -625,8 +591,6 @@ spring.jackson.deserialization.fail-on-unknown-properties=true # 加上这一句
 # 注意这个文件不可以加入任何注释, 记得删除我在这里写的注释
 
 ```
-
-@tab 启动文件
 
 ```java
 // MyRestfulWebApplicationTests.java
@@ -651,8 +615,6 @@ public class MyRestfulWebApplication {
 }
 
 ```
-
-:::
 
 ![浏览器访问 http://127.0.0.1:8080/greeting_get 后](assets/image-20241212172714835.png)
 
@@ -761,7 +723,7 @@ public class MyRestfulWebApplication {
 >
 > 补充：使用 `RestTemplate` 的方式其实意味着 `Spring Boot` 也是可以开发一个前端的，不过这种前端是无界面的前端，更加适合在终端中执行。
 
-### 1.5.原理深入
+#### 3.2.5.原理深入
 
 不知道您有没有注意到一些问题，我们的确定义了两个东西：
 
@@ -784,7 +746,7 @@ public class MyRestfulWebApplication {
 - 资源表示类（如 `Greeting`）用于封装返回给客户端的数据。`GreetingController` 类内部使用了 `Greeting` 类，但不需要显式地调用 `GreetingController` 实例
 - 通过 `Bean` 管理和 自动映射，`Spring` 会自动处理 `HTTP` 请求并执行相应的方法，开发者无需手动实例化和调用控制器类
 
-### 1.6.常用注解
+#### 3.2.6.常用注解
 
 我相信您一定能明白注解对于 `Spring Boot` 的重要性，因此这里补充一些关于常见注解的详细讲解，您需要按需加入到您的应用中，并且值得注意的是，每一组相关的组件我都会用足够完整的代码供您测试。
 
@@ -797,14 +759,3 @@ public class MyRestfulWebApplication {
 - `@RequestBody`：请求载荷，从请求载荷中获取字段值
 - `@JsonIgnoreProperties`：对资源描述类约束的控制
 
-> [!IMPORTANT]
->
-> 补充：后面会有一个十分标准工业化的模板项目，会带您更加工业化理解 `Spring Boot` 的魅力，本节文档只是教您如何快速使用 `Java` 做到和其他语言一样便捷的 `Web` 服务器开发而已 !!还远远不够呢!!。
-
-## 2.用 JPA 操作数据库
-
-https://spring.io/guides/gs/accessing-data-jpa
-
----
-
-<!-- @include: basic.md#comment -->

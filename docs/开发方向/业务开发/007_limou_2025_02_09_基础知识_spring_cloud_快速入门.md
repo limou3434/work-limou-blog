@@ -346,7 +346,7 @@ public class WorkTestApplication {
 
 ### 1.4.动态配置
 
-但是有个简单直接的问题，如果我们远端配置发生了变动会怎么样？我们把远端存储的端口号修改为 `8688`，然后重新访问 `http://localhost:8888/work-test/develop/main`，欸很好，服务端可以读取到修改。那么我们的客户端...不对啊！客户端没有重启，那就不会更换端口号了，这就需要使用消息队列组件了，可以参考这位 [老哥的文档](https://www.cnblogs.com/fengzheng/p/11242128.html)。
+但是有个简单直接的问题，如果我们远端配置发生了变动会怎么样？我们把远端存储的端口号修改为 `8688`，然后重新访问 `http://localhost:8888/work-test/develop/main`，欸很好，服务端可以读取到修改。那么我们的客户端...不对啊！客户端没有重启，那就不会更换端口号了，这就需要使用消息队列组件了，可以参考这位 [老哥的文档](https://www.cnblogs.com/fengzheng/p/11242128.html)，也和我们后面的总线有关。
 
 ## 2.网关路由
 
@@ -358,7 +358,7 @@ public class WorkTestApplication {
 -   反向代理
 -   负载均衡
 
-但是有一些需求难以使用 `Nginx` 实现，并且非常不灵活，同时 `Nginx` 无法高度适配微服务项目，因此我们决定使用 `Spring Cloud Gateway` 做网关层的配置。而 `Nginx` 可以适配到前端资源快速挂载上，并且可以做一些简单的服务，从 `Spring` 类项目角度上来说，使用 `Spring Cloud Gateway` 的方案更加舒适（毕竟更加贴切自己的生态，集成有保证）。另外对于所有的项目来说，都可以使用 `Nginx` 做为网关层，这波 `Nginx` 通用性是占了上风，高性能也是 `Nginx` 的主要优势。另外在新技术 `k8s` 面前，实际上这两者都不需要，因为 `k8s` 内部也有网关的相关内容（不过 `Nginx` 可以部署高性能前端这点倒是可以保留）。
+但是有一些需求难以使用 `Nginx` 实现，并且非常不灵活，同时 `Nginx` 无法高度适配微服务项目，因此我们决定使用 `Spring Cloud Gateway` 做网关层的配置。而 `Nginx` 可以适配到前端资源快速挂载上，并且可以做一些简单的服务，从 `Spring` 类项目角度上来说，使用 `Spring Cloud Gateway` 的方案更加舒适（毕竟更加贴切自己的生态，集成有保证）。另外对于所有的项目来说，都可以使用 `Nginx` 做为网关层，这波 `Nginx` 通用性是占了上风，高性能也是 `Nginx` 的主要优势。
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -588,10 +588,6 @@ public class WorkTestApplication {
 ```
 
 然后访问 `http://localhost:8888/work_test_api/hello` 就可以达到和使用 `http://localhost:8000/work_test_api/hello` 一样的效果。如果搭配我们之前使用的 `Spring Cloud Config` 就可以让用户统一访问本网关服务，就可以同时代理到多个服务。
-
->   [!IMPORTANT]
->
->   吐槽：严格来说如果依赖使用 `k8s`，这些技术就都被“淘汰”了。因此我们不用学习得特别深入学习 `Spring Cloud`，当然这是因为我的职业原因，如果您的公司并没有相关的 `k8s` 基础设施，那么我还是推荐这一套的。
 
 ### 2.2.修改报文
 
@@ -1768,19 +1764,19 @@ public class WorkEurekaClientApplication {
 
 ```
 
-接下来调用 `http://localhost:8000/call` 就会发现两个 `work-test` 各自承担了一部分压力，在调用接口后进行了打印。但是！我要说但是了，使用 `Ribbon` 机制实现的注解 `@LoadBalanced` 已经不再继续维护了，现在更多使用 `Spring Cloud LoadBalanced` 以旨在更加灵活的替代方案（`Ribbon` 仅支持 `Eureka` 作为配置中心），待补充...
+接下来调用 `http://localhost:8000/call` 就会发现两个 `work-test` 各自承担了一部分压力，在调用接口后进行了打印。但是！我要说但是了，使用 `Ribbon` 机制实现的注解 `@LoadBalanced` 已经不再继续维护了，现在更多使用 `Spring Cloud LoadBalanced` 以旨在更加灵活的替代方案（`Ribbon` 仅支持 `Eureka` 作为配置中心），不过这个最好搭配 `Nacos` 进行使用。
 
-## 5.熔断降级
+## 5.服务监控
 
-Spring Cloud Circuit Breaker
+`Spring Cloud Sleuth`，用到再来补充...
 
-## 6.服务监控
+## 6.熔断降级
 
-Spring Cloud Sleuth
+`Spring Cloud Circuit Breaker`，用到再来补充...
 
 ## 7.事件总线
 
-Spring Cloud Bus
+`Spring Cloud Bus`，用到再来补充...
 
 >   [!IMPORTANT]
 >

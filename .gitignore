@@ -1,23 +1,8 @@
-# .gitignore
-# VuePress 临时文件
-work-document-blogs-frontend/docs/.vuepress/.temp
+**/node_modules
 
-# VuePress 缓存文件
-work-document-blogs-frontend/docs/.vuepress/.cache
+docs/.vuepress/.cache
+docs/.vuepress/.temp
+docs/.vuepress/dist
 
-# VuePress 依赖文件
-work-document-blogs-frontend/node_modules
-work-document-blogs-frontend/package-lock.json
-
-# VuePress 静态文件
-work-document-blogs-frontend/docs/.vuepress/dist
-work-document-blogs-frontend/docs/.vuepress/dist.tar
-
-
-# VuePress 
-
-# IDEA 缓存文件
-work-document-blogs-frontend/.idea
-
-# Github 缓存文件
-.github
+.DS_Store
+*.log

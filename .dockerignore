@@ -1,5 +1,0 @@
-dockerfile_build.sh
-dockerfile_run.sh
-node_modules/
-*.log
-docs/.vuepress/dist/

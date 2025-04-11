@@ -3,12 +3,11 @@ import { navbar } from './navbar'
 import { notes } from './notes'
 
 /**
- * @see https://theme-plume.vuejs.press/config/basic/
+ * Theme 配置文件
  */
 export default defineThemeConfig({
-
   // 网站标志
-  logo: 'https://theme-plume.vuejs.press/plume.png',
+  logo: './logo.svg',
 
   // 深色模式
   appearance: true, // 启动深色模式
@@ -34,38 +33,47 @@ export default defineThemeConfig({
     layout: 'left', // 卡片显示左侧
   },
 
-  // 公告板
+  // 全站公告
   bulletin: {
     layout: 'top-right',
     contentType: 'markdown',
-    title: '公告',
-    content: '本网站正在不断升级中，如有遇到 bug 可以在本开发者的对应项目下提交 issues',
+    title: '本站公告',
+    content: '本网站正在不断升级中，若有 bug 可以在本开发者的对应项目下提交 issues',
   },
 
-  // aside: true, // 页内侧边栏， 默认显示在右侧
-  // outline: [2, 3], // 页内大纲， 默认显示 h2, h3
+  // 过渡动画
+  transition: {
+    page: true, // 启用页面间跳转过渡动画
+    postList: true, // 启用博客文章列表过渡动画
+    appearance: 'circle-clip', // 启用深色模式切换过渡动画(并且可以选择多种模式)
+  },
 
   // 版权信息
-  // copyright: true,
+  copyright: true,
 
-  // prevPage: true,   // 是否启用上一页链接
-  // nextPage: true,   // 是否启用下一页链接
-  // createTime: true, // 是否显示文章创建时间
+  // 页面链接
+  prevPage: true, // 是否启用上一页链接
+  nextPage: true, // 是否启用下一页链接
+
+  // 创建时间
+  createTime: true, // 是否显示文章创建时间
+
+  // 显示大纲
+  outline: [2, 5], // 页内大纲， 默认显示 h2, h3
+
+  // 站点导航
+  navbar,
+
+  // 站点侧边
+  aside: true, // 页内侧边栏， 默认显示在右侧
 
   // 站点页脚
-  // footer: {
-  //   message: 'Power by <a target="_blank" href="https://v2.vuepress.vuejs.org/">VuePress</a> & <a target="_blank" href="https://theme-plume.vuejs.press">vuepress-theme-plume</a>',
-  //   copyright: '',
-  // },
+  footer: {
+    message: 'Make by <a target="_blank" href="https://github.com/limou3434">Work</a>',
+    copyright: 'MIT',
+  },
 
-  navbar,
+  // 站点笔记
   notes,
-
-  /* 过渡动画 @see https://theme-plume.vuejs.press/config/basic/#transition */
-  // transition: {
-  //   page: true,        // 启用 页面间跳转过渡动画
-  //   postList: true,    // 启用 博客文章列表过渡动画
-  //   appearance: 'fade',  // 启用 深色模式切换过渡动画, 或配置过渡动画类型
-  // },
 
 })

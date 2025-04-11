@@ -2,100 +2,77 @@ import { viteBundler } from '@vuepress/bundler-vite'
 import { defineUserConfig } from 'vuepress'
 import { plumeTheme } from 'vuepress-theme-plume'
 
+/**
+ * vuepress 配置文件
+ */
 export default defineUserConfig({
+  // 网站元数
   base: '/work-blog-website/',
   lang: 'zh-CN',
-  title: 'Work Blog Website',
-  description: '工作室成员长期实践形成的公用博客平台',
-
+  title: '缡墨',
+  description: '工作室成员长期实践形成的公用博客平台——缡墨',
   head: [
-    // 配置站点图标
-    ['link', { rel: 'icon', type: 'image/png', href: 'https://theme-plume.vuejs.press/favicon-32x32.png' }],
+    ['link', { rel: 'icon', type: 'image/png', href: 'https://theme-plume.vuejs.press/favicon-32x32.png' }], // 配置站点图标
   ],
 
+  // 打包工具
   bundler: viteBundler(),
-  shouldPrefetch: false, // 站点较大，页面数量较多时，不建议启用
 
+  // 预先加载
+  shouldPrefetch: false, // 站点较大, 页面数量较多时, 不建议启用
+
+  // 主题配置
   theme: plumeTheme({
-    /* 添加您的部署域名, 有助于 SEO, 生成 sitemap */
-    // hostname: 'https://your_site_url',
+    // 博客配置
+    blog: {
+      postList: true, // 是否启用文章列表页
+      tags: true, // 是否启用标签页
+      archives: true, // 是否启用归档页
+      categories: true, // 是否启用分类页
+      postCover: 'right', // 文章封面位置
+      pagination: 15, // 每页显示文章数量
+    },
+    article: '/article/', // 博客文档前缀
 
-    /* 文档仓库配置，用于 editLink */
+    // 页面水印
+    watermark: true,
+
+    // 编译缓存
+    cache: 'filesystem', // 加快编译速度
+
+    // 自动添加
+    autoFrontmatter: {
+      permalink: true, // 是否给 frontmatter 生成永久链接
+      createTime: true, // 是否 frontmatter 生成创建时间
+      title: false, // 是否 frontmatter 生成标题
+    },
+
+    // 本地搜索
+    search: { provider: 'local' },
+
+    // 部署域名
+    // hostname: 'https://your_site_url', // 有助于 SEO, 生成 sitemap
+
+    // 文档仓库
     // docsRepo: '',
     // docsDir: 'docs',
     // docsBranch: '',
 
-    /* 页内信息 */
+    // 页内信息
     // editLink: true,
     // lastUpdated: true,
     // contributors: true,
     // changelog: false,
 
-    /**
-     * 博客
-     * @see https://theme-plume.vuejs.press/config/basic/#blog
-     */
-    // blog: false, // 禁用博客
-    // blog: {
-    //   postList: true, // 是否启用文章列表页
-    //   tags: true, // 是否启用标签页
-    //   archives: true, // 是否启用归档页
-    //   categories: true, // 是否启用分类页
-    //   postCover: 'right', // 文章封面位置
-    //   pagination: 15, // 每页显示文章数量
-    // },
-
-    /* 博客文章页面链接前缀 */
-    article: '/article/',
-
-    /**
-     * 编译缓存，加快编译速度
-     * @see https://theme-plume.vuejs.press/config/basic/#cache
-     */
-    cache: 'filesystem',
-
-    /**
-     * 为 markdown 文件自动添加 frontmatter 配置
-     * @see https://theme-plume.vuejs.press/config/basic/#autofrontmatter
-     */
-    // autoFrontmatter: {
-    //   permalink: true,  // 是否生成永久链接
-    //   createTime: true, // 是否生成创建时间
-    //   title: true,      // 是否生成标题
-    // },
-
-    /* 本地搜索, 默认启用 */
-    search: { provider: 'local' },
-
-    /**
-     * Algolia DocSearch
-     * 启用此搜索需要将 本地搜索 search 设置为 false
-     * @see https://theme-plume.vuejs.press/config/plugins/search/#algolia-docsearch
-     */
-    // search: {
+    // 搜索服务
+    // search: { // 启用此搜索需要将 本地搜索 search 设置为 false
     //   provider: 'algolia',
     //   appId: '',
     //   apiKey: '',
     //   indexName: '',
     // },
 
-    /**
-     * Shiki 代码高亮
-     * @see https://theme-plume.vuejs.press/config/plugins/code-highlight/
-     */
-    // codeHighlighter: {
-    //   twoslash: true, // 启用 twoslash
-    //   whitespace: true, // 启用 空格/Tab 高亮
-    //   lineNumbers: true, // 启用行号
-    // },
-
-    /* 文章字数统计、阅读时间，设置为 false 则禁用 */
-    // readingTime: true,
-
-    /**
-      * markdown
-      * @see https://theme-plume.vuejs.press/config/markdown/
-      */
+    // 拓展语法
     // markdown: {
     //   abbr: true,         // 启用 abbr 语法  *[label]: content
     //   annotation: true,   // 启用 annotation 语法  [+label]: content
@@ -135,18 +112,15 @@ export default defineUserConfig({
     //   imageSize: 'local', // 启用 自动填充 图片宽高属性，避免页面抖动
     // },
 
-    /**
-     * 水印
-     * @see https://theme-plume.vuejs.press/guide/features/watermark/
-     */
-    // watermark: true,
+    // 资源链替
+    // replaceAssets: 'https://cdn.example.com',
 
-    /**
-     * 评论 comments
-     * @see https://theme-plume.vuejs.press/guide/features/comments/
-     */
+    // 加密功能
+    // encrypt: {},
+
+    // 评论功能
     // comment: {
-    //   provider: '', // "Artalk" | "Giscus" | "Twikoo" | "Waline"
+    //   provider: 'Giscus', // "Artalk" | "Giscus" | "Twikoo" | "Waline"
     //   comment: true,
     //   repo: '',
     //   repoId: '',
@@ -156,17 +130,5 @@ export default defineUserConfig({
     //   reactionsEnabled: true,
     //   inputPosition: 'top',
     // },
-
-    /**
-     * 资源链接替换
-     * @see https://theme-plume.vuejs.press/guide/features/replace-assets/
-     */
-    // replaceAssets: 'https://cdn.example.com',
-
-    /**
-     * 加密功能
-     * @see https://theme-plume.vuejs.press/guide/features/encryption/
-     */
-    // encrypt: {},
   }),
 })

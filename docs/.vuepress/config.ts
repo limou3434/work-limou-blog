@@ -50,28 +50,6 @@ export default defineUserConfig({
     // 本地搜索
     search: { provider: 'local' },
 
-    // 部署域名
-    // hostname: 'https://your_site_url', // 有助于 SEO, 生成 sitemap
-
-    // 文档仓库
-    // docsRepo: '',
-    // docsDir: 'docs',
-    // docsBranch: '',
-
-    // 页内信息
-    // editLink: true,
-    // lastUpdated: true,
-    // contributors: true,
-    // changelog: false,
-
-    // 搜索服务
-    // search: { // 启用此搜索需要将 本地搜索 search 设置为 false
-    //   provider: 'algolia',
-    //   appId: '',
-    //   apiKey: '',
-    //   indexName: '',
-    // },
-
     // 拓展语法
     // markdown: {
     //   abbr: true,         // 启用 abbr 语法  *[label]: content
@@ -110,6 +88,28 @@ export default defineUserConfig({
     //   },
     //   include: true,      // 在 Markdown 文件中导入其他 markdown 文件内容
     //   imageSize: 'local', // 启用 自动填充 图片宽高属性，避免页面抖动
+    // },
+
+    // 部署域名
+    // hostname: 'https://your_site_url', // 有助于 SEO, 生成 sitemap
+
+    // 文档仓库
+    // docsRepo: '',
+    // docsDir: 'docs',
+    // docsBranch: '',
+
+    // 页内信息
+    // editLink: true,
+    // lastUpdated: true,
+    // contributors: true,
+    // changelog: false,
+
+    // 搜索服务
+    // search: { // 启用此搜索需要将 本地搜索 search 设置为 false
+    //   provider: 'algolia',
+    //   appId: '',
+    //   apiKey: '',
+    //   indexName: '',
     // },
 
     // 资源链替

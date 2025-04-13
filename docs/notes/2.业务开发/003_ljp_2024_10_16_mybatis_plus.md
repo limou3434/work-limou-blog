@@ -1,9 +1,9 @@
 ---
-title: 003_limou_2024_10_16_基础知识_mybatis_plus_快速入门
-createTime: 2025/04/09 13:05:15
-permalink: /article/hoek9uac/
+createTime: 2025/04/11 13:56:03
+permalink: /2.业务开发/mxyhejwr/
 ---
-# MyBatisPlus 快速入门
+
+# MyBatisPlus
 
 ## 1.MyBatisPlus 全面概述
 

@@ -1,9 +1,8 @@
 ---
-title: 007_limou_2025_02_09_基础知识_spring_cloud_快速入门
-createTime: 2025/04/09 13:05:15
-permalink: /article/m8wq9zxz/
+createTime: 2025/04/11 13:56:03
+permalink: /2.业务开发/qotonh5k/
 ---
-# Spring Cloud 快速入门
+# Spring Cloud
 
 在构建 `Spring Cloud` 微服务应用时，根据不同的需求，您需要在 `pom.xml` 文件中引入相应的 `Spring Cloud` 组件依赖。以下是一些常用的 `Spring Cloud` 组件及其对应的 `Maven` 依赖。我不要求您学过微服务，但是您可以在学习 `Spring Clound` 的过程中学习。
 

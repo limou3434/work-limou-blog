@@ -1,9 +1,9 @@
 ---
-title: 004_limou_2024_10_16_基础知识_spring_framework_快速入门
-createTime: 2025/04/09 13:05:15
-permalink: /article/ggjdbvdj/
+createTime: 2025/04/11 13:56:03
+permalink: /2.业务开发/b137ch9q/
 ---
-# Spring Framework 快速入门
+
+# Spring Framework
 
 ## 1.Spring Framework 全面概述
 

@@ -14,4 +14,6 @@ export const navbar = defineNavbarConfig([
       // { text: '存储持久', link: '/notes/1.编码修养/4.持久存储/README.md' },
     ]
   },
+  { text: '业务开发', link: '/notes/2.业务开发/README.md' },
+  { text: '机器学习', link: '/notes/3.机器学习/README.md' },
 ])

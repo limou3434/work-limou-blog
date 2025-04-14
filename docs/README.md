@@ -7,8 +7,8 @@ config:
     full: true
     background: tint-plate
     hero:
-      name: 工作室博客平台（缡墨）
-      tagline: Work Blog Website (limou)
+      name: 工作室博客平台
+      tagline: Work Blog Website
       text: 这是一个集齐工作室成员实践的博客平台——缡墨
       actions:
         -

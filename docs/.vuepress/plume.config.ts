@@ -1,6 +1,7 @@
 import { defineThemeConfig } from 'vuepress-theme-plume'
 import { navbar } from './navbar'
 import { notes } from './notes'
+import * as path from "node:path";
 
 /**
  * Theme 配置文件
@@ -35,10 +36,11 @@ export default defineThemeConfig({
 
   // 全站公告
   bulletin: {
+    // id: '1',
     layout: 'top-right',
-    contentType: 'markdown',
+    border: true,
+    lifetime: 'session',
     title: '本站公告',
-    content: '本网站正在不断升级中，若有 bug 可以在本开发者的对应项目下提交 issues',
   },
 
   // 过渡动画

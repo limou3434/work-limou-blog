@@ -50,6 +50,36 @@ export default defineUserConfig({
     // 本地搜索
     search: { provider: 'local' },
 
+    // 评论功能
+    comment: {
+      provider: 'Giscus', // "Artalk" | "Giscus" | "Twikoo" | "Waline"
+      comment: true,
+      repo: 'limou3434/work-blog-website-comment',
+      repoId: 'R_kgDOOZVKTA',
+      category: 'Q&A',
+      categoryId: 'DIC_kwDOOZVKTM4CpFNb',
+      mapping: 'pathname',
+      reactionsEnabled: true,
+      inputPosition: 'top',
+    },
+
+    // 页内信息
+    editLink: true,
+    contributors: true,
+    changelog: false,
+    // lastUpdated: true,
+    plugins: {
+      git: true, // 如果您在此处直接声明为 true, 则表示开发环境和生产环境都启用该功能
+    },
+
+    // 部署域名
+    hostname: 'https://limou3434.github.io/work-blog-website/', // 有助于 SEO, 生成 sitemap
+
+    // 文档仓库
+    docsRepo: 'https://github.com/limou3434/work-blog-website',
+    docsDir: 'docs',
+    docsBranch: 'main',
+
     // 拓展语法
     markdown: {
       mermaid: true,      // 启用 mermaid
@@ -75,40 +105,26 @@ export default defineUserConfig({
       fileTree: {
         icon: 'colored',
       },
-    //   abbr: true,         // 启用 abbr 语法  *[label]: content
-    //   artPlayer: true,    // 启用嵌入 artPlayer 本地视频 语法 @[artPlayer](url)
-    //   icons: true,        // 启用内置图标语法  :[icon-name]:
-    //   codepen: true,      // 启用嵌入 codepen 语法 @[codepen](user/slash)
-    //   replit: true,       // 启用嵌入 replit 语法 @[replit](user/repl-name)
-    //   codeSandbox: true,  // 启用嵌入 codeSandbox 语法 @[codeSandbox](id)
-    //   jsfiddle: true,     // 启用嵌入 jsfiddle 语法 @[jsfiddle](user/id)
-    //   npmTo: true,        // 启用 npm-to 容器  ::: npm-to
-    //   demo: true,         // 启用 demo 容器  ::: demo
-    //   repl: {             // 启用 代码演示容器
-    //     go: true,         // ::: go-repl
-    //     rust: true,       // ::: rust-repl
-    //     kotlin: true,     // ::: kotlin-repl
-    //   },
-    //   chartjs: true,      // 启用 chart.js
-    //   echarts: true,      // 启用 ECharts
-    //   flowchart: true,    // 启用 flowchart
-    //   include: true,      // 在 Markdown 文件中导入其他 markdown 文件内容
-    //   imageSize: 'local', // 启用 自动填充 图片宽高属性，避免页面抖动
+      //   abbr: true,         // 启用 abbr 语法  *[label]: content
+      //   artPlayer: true,    // 启用嵌入 artPlayer 本地视频 语法 @[artPlayer](url)
+      //   icons: true,        // 启用内置图标语法  :[icon-name]:
+      //   codepen: true,      // 启用嵌入 codepen 语法 @[codepen](user/slash)
+      //   replit: true,       // 启用嵌入 replit 语法 @[replit](user/repl-name)
+      //   codeSandbox: true,  // 启用嵌入 codeSandbox 语法 @[codeSandbox](id)
+      //   jsfiddle: true,     // 启用嵌入 jsfiddle 语法 @[jsfiddle](user/id)
+      //   npmTo: true,        // 启用 npm-to 容器  ::: npm-to
+      //   demo: true,         // 启用 demo 容器  ::: demo
+      //   repl: {             // 启用 代码演示容器
+      //     go: true,         // ::: go-repl
+      //     rust: true,       // ::: rust-repl
+      //     kotlin: true,     // ::: kotlin-repl
+      //   },
+      //   chartjs: true,      // 启用 chart.js
+      //   echarts: true,      // 启用 ECharts
+      //   flowchart: true,    // 启用 flowchart
+      //   include: true,      // 在 Markdown 文件中导入其他 markdown 文件内容
+      //   imageSize: 'local', // 启用 自动填充 图片宽高属性，避免页面抖动
     },
-
-    // 部署域名
-    // hostname: 'https://your_site_url', // 有助于 SEO, 生成 sitemap
-
-    // 文档仓库
-    // docsRepo: '',
-    // docsDir: 'docs',
-    // docsBranch: '',
-
-    // 页内信息
-    // editLink: true,
-    // lastUpdated: true,
-    // contributors: true,
-    // changelog: false,
 
     // 搜索服务
     // search: { // 启用此搜索需要将 本地搜索 search 设置为 false
@@ -123,18 +139,5 @@ export default defineUserConfig({
 
     // 加密功能
     // encrypt: {},
-
-    // 评论功能
-    // comment: {
-    //   provider: 'Giscus', // "Artalk" | "Giscus" | "Twikoo" | "Waline"
-    //   comment: true,
-    //   repo: '',
-    //   repoId: '',
-    //   category: '',
-    //   categoryId: '',
-    //   mapping: 'pathname',
-    //   reactionsEnabled: true,
-    //   inputPosition: 'top',
-    // },
   }),
 })

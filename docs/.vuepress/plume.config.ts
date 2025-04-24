@@ -71,7 +71,7 @@ export default defineThemeConfig({
 
   // 站点页脚
   footer: {
-    message: 'Make by <a target="_blank" href="https://github.com/limou3434">Work</a>',
+    message: 'Make by <a target="_blank" href="https://github.com/limou3434">Work</a><br>粤ICP备2025406450号-1',
     copyright: 'MIT',
   },
 

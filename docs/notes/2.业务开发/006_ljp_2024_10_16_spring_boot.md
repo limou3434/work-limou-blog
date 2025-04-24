@@ -45,7 +45,7 @@ permalink: /2.业务开发/ghl7uh4i/
 
 ## 3.Spring Boot 使用教程
 
-### 3.1.首次编写
+### 3.1.快速使用
 
 > [!WARNING]
 >
@@ -208,7 +208,7 @@ $ ./mvnw spring-boot:run
 >
 > 补充：当然仅仅是这样是不够的，为什么，因为这样仅仅是写好了一个后端接口而已，`cpp-http` 可以做到、`python-flask、python-django` 可以做到、`node.js-koa.js` 可以做到，为什么偏偏工业偏爱使用 `java-spring boot` 呢？因此您需要了解更多关于 `Spring Boot` 的配置内容。
 
-### 3.2.再次编写
+### 3.2.搭建服务
 
 根据常见的服务器开发，这里给出一份关于 `Spring Boot` 的总文档，旨在让您只看一遍就知道如何编写一个完整的 `Web` 服务器。
 
@@ -224,7 +224,7 @@ $ ./mvnw spring-boot:run
 #### 3.2.1.编码目标
 
 - 我们将实现一个 `Web` 服务器
-- 构建常见的 `HTTP` 请求、
+- 构建常见的 `HTTP` 请求
 - 需要自定义返回的 `JSON` 格式
 
 #### 3.2.2.创建项目
@@ -763,3 +763,49 @@ public class MyRestfulWebApplication {
 - `@RequestBody`：请求载荷，从请求载荷中获取字段值
 - `@JsonIgnoreProperties`：对资源描述类约束的控制
 
+## 4.Spring Boot 深入学习
+
+### 4.1.启动流程
+
+`Spring Boot` 的启动流程可以总结为以下几个核心步骤（示例为 `Spring Boot 2.7.6` 版本）：
+
+1.   **启动 main() 方法**：应用从 `main()` 方法启动，并通过 `SpringApplication.run()` 引导应用启动。
+
+2.   **创建 SpringApplication**：应用会创建 `SpringApplication` 对象，推断应用类型、设置初始化器、设置启动监听器、确定主应用类。
+
+3.   **准备环境**：`Spring Boot` 在启动过程中准备应用环境，加载配置文件、系统环境变量以及命令行参数。
+
+4.   **创建并刷新 ApplicationContext**：创建应用上下文，加载配置类和自动配置类，注册 `Bean` 并执行依赖注入等初始化操作。
+
+5.   **在刷新上下文时启动嵌入式 Web 服务器**：对于 `Web` 应用，Spring Boot 会自动启动嵌入式 `Web` 容器（如 `Tomcat`），并注册相关的 `Servlet` 和 `Filter`。
+
+     >   [!IMPORTANT]
+     >
+     >   补充：`Servlet` 是 `Java EE` 规范的一部分，本质上是处理 `HTTP` 请求的一个类。
+     >
+     >   *   用于接收请求（如 `GET、POST`）
+     >   *   处理业务逻辑
+     >   *   响应数据客户（返回 `HTML、JSON` 等）
+     >
+     >   总结就是核心业务处理。
+
+     >   [!IMPORTANT]
+     >
+     >   补充：`Filter` 是一种“过滤器”，可以在请求到达 `Servlet` **之前** 或响应返回客户端 **之后** 做处理。常用于：
+     >
+     >   *   权限校验
+     >   *   日志记录
+     >   *   编码设置
+     >   *   跨域处理
+     >
+     >   总结就是拦截器/中间件。
+
+     >   [!IMPORTANT]
+     >
+     >   补充：一般 `Spring` 通过 `@WebServlet` / `@WebFilter` 注解 + `@ServletComponentScan`，不过在 `Spring Boot` 中如果使用 `@RestController` 则会自动配置，除非又特殊场景才会手动使用（例如日志处理）。
+
+6.   **发布应用已启动事件**：对应监听 `stated` 事件逻辑会被触发。
+
+7.   **执行 CommandLineRunner 和 ApplicationRunner**：在应用启动完成后，执行实现了 `CommandLineRunner` 和 `ApplicationRunner` 接口的初始化逻辑。
+
+8.   **发布 ready 事件、应用启动完成**：触发 `ApplicationReadyEvent`，应用进入运行状态，处理业务请求或任务。

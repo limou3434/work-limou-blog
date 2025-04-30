@@ -64,7 +64,7 @@ permalink: /2.业务开发/ghl7uh4i/
 5. 创建 `web` 项目，在 `Dependencies(依赖项)` 对话框中，搜索并添加`Spring Web` 依赖项
 6. 填写元数据 **项目公司域名组、项目包名、项目名、项目描述、项目包名**
 7. 选择项目包类型
-8. 选择语言版本，这里我选择 `Java 17`，请注意在您的 `Linux` 里使用 `sudo apt install -y openjdk-17-jd` 下载 `Java 17`，避免版本不匹配
+8. 选择语言版本，这里我选择 `Java 17`，请注意在您的 `Linux` 里使用 `sudo apt install -y openjdk-17-jdk` 下载 `Java 17`，避免版本不匹配
 9. 点击 “生成” 按钮，下载 `zip` 文件，然后将其解压缩到计算机上的文件夹中
 10. 此时浏览器可以从远端下载到您配置好的 `Spring Boot` 项目脚手架代码
 

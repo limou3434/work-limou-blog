@@ -68,6 +68,10 @@ permalink: /2.业务开发/ghl7uh4i/
 9. 点击 “生成” 按钮，下载 `zip` 文件，然后将其解压缩到计算机上的文件夹中
 10. 此时浏览器可以从远端下载到您配置好的 `Spring Boot` 项目脚手架代码
 
+>   [!IMPORTANT]
+>
+>   补充：如果您需要更换 `Spring Boot` 版本，则可以直接在项目生成后的 `pom` 中修改，不过其实您也可以考虑使用别的初始化模板网站，只是官方的初始化模板网站不再支持这种行为而已。例如访问 `https://start.aliyun.com/` 即可得到其他更多的 `Spring Boot` 版本。
+
 #### 3.1.2.目录结构
 
 下面就是一个 `Spring Boot` 生成的目录结构，相关注释我都写在里面了。
@@ -234,6 +238,10 @@ $ ./mvnw spring-boot:run
 ![](assets/img_v3_02he_e0c6194c_45ae_44b6_9f17_9fea9c06715g.png)
 
 ![](assets/img_v3_02he_c6f68e77_14c8_495c_8fa9_b4819a538dag.png)
+
+>   [!IMPORTANT]
+>
+>   补充：注意观察这里的 “服务器 `url`”，您可以修改这里的地址为我们之前说的网址 `https://start.aliyun.com/` 以支持更多过往版本的 `Spring Boot`。
 
 ![](assets/img_v3_02he_1baaad61_f00a_4729_a4a2_d5b9dffdc3cg.png)
 
